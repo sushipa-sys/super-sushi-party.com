@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABOUT | Super Sushi Party（スーパースシパーティー）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Bebas Neue = 既存サイトと同じラテン見出し / Zen Maru Gothic = ゆるく丸い和文（住人ブランドの質感に寄せる） -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css?0722d">
+<link rel="shortcut icon" href="../favicon.ico">
+
+<!-- OGP -->
+<meta property="og:title" content="ABOUT | Super Sushi Party" />
+<meta property="og:description" content="パーティーみたいな毎日を。あべゆうか×松本伊代によるアニメーション制作ユニット Super Sushi Party のABOUTページ。" />
+<meta property="og:url" content="https://super-sushi-party.com/about.html" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://super-sushi-party.com/image/ogp_img_sushi.jpg" />
+<meta property="og:site_name" content="Super Sushi Party Official Website" />
+<meta property="og:locale" content="ja_JP" />
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ABOUT | Super Sushi Party" />
+<meta name="twitter:description" content="パーティーみたいな毎日を。あべゆうか×松本伊代によるアニメーション制作ユニット Super Sushi Party のABOUTページ。" />
+<meta name="twitter:image" content="https://super-sushi-party.com/image/ogp_img_sushi.jpg" />
+<meta name="description" content="パーティーみたいな毎日を。あべゆうか×松本伊代によるアニメーション制作ユニット Super Sushi Party のABOUTページ。" />
+<meta name="keywords" content="Super Sushi Party, スーパースシパーティー, アニメーション, 制作ユニット, ABOUT, あべゆうか, 松本伊代" />
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5S5HNEFHS9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5S5HNEFHS9');
+</script>
+
+<style>
+/* =========================================================================
+   ABOUTページ専用スタイル（about_scroll_demo.html を移植）
+   THEME TOKENS
+   ========================================================================= */
+:root{
+  --about-bg:     #FBFAF7;   /* しゃりの白（クリーム系クリシェを避けた僅かに冷たい白）*/
+  --about-ink:    #1a1712;
+  --about-muted:  #8a8378;
+  --salmon:       #ff5d73;   /* アクセント1：サーモン／握りのピンク */
+  --wasabi:       #1f9e8b;   /* アクセント2：わさびのグリーン */
+  --about-line:   rgba(26,23,18,.14);
+  --sweep-glow:   #fff4ef;   /* キャプションの光の帯：境界の明るいグロス */
+  --maxw:         880px;
+}
+/* ダークモードは常にサイト共通のトグル（body.dark-mode クラス）にだけ連動させる。
+   @media (prefers-color-scheme: dark) は使わない：OSがダーク設定の端末では
+   ユーザーがトグルでライトモードを選んでも上書きされてしまい、実機で常に
+   ダーク表示になってしまう不具合の原因だったため削除。
+   （システム設定は script.js 側で初期値としてのみ考慮され、トグル操作や
+   localStorage の保存値が優先される） */
+body.dark-mode{
+  --about-bg:#141210; --about-ink:#f4efe6; --about-muted:#9a9184; --about-line:rgba(244,239,230,.16); --sweep-glow:#ffe3d8;
+}
+
+html{ scroll-behavior:auto; }           /* smooth化はJSが担うので native smooth はオフ */
+body{
+  background:var(--about-bg); color:var(--about-ink);
+  line-height:1.9;
+  overflow-x:hidden;
+}
+
+/* 既存サイトのグローバル書体指定（*{Helvetica Neue}, h1-h6{Bebas Neue}）を
+   ABOUTページの本文エリア内でだけ無効化し、デモの書体設計
+   （本文=Zen Maru Gothic / 一部ラベル=Bebas Neue）を優先させる */
+#wrap .section, #wrap .section *{
+  font-family:"Zen Maru Gothic", system-ui, sans-serif;
+}
+#wrap .section .eyebrow,
+#wrap .section .tagline b,
+#wrap .section .vibes-logo,
+#wrap .section .act .no,
+#wrap .section .sns{
+  font-family:"Bebas Neue", sans-serif;
+}
+
+/* --- ふわふわ漂うキャラクターの背景レイヤー -----------------------------------
+   .flower-field … wrapperの外＝ビューポート固定のコンテナ
+   .parallax     … 出現位置（JSが left/top を設定）＋ 下から浮かび上がる/フェードする
+                    エンター・イグジット演出（CSSトランジション）
+   .drift        … アイドルの横揺れ（CSSアニメ）
+   .bob          … アイドルの上下＋わずかな回転（CSSアニメ・別周期）
+   セクション遷移のたびに、JSが表示中の10体をフェードアウトさせつつ、
+   ランダムな新しい10体を画面下から浮かび上がらせて入れ替える（回転演出はなし）
+   画像は /image/about/ のキャラクターPNGをランダムに割り当て */
+.flower-field{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.parallax{
+  position:absolute; will-change:transform,opacity;
+  transition: transform 1.1s cubic-bezier(.19,1,.22,1), opacity .9s ease;
+}
+.parallax.enter{ opacity:0; transform:translateY(38vh); }
+.parallax.settled{ opacity:1; transform:translateY(0); }
+.parallax.exit{
+  opacity:0; transform:translateY(-10vh);
+  transition: transform .7s ease, opacity .7s ease;
+}
+.drift{
+  will-change:transform;
+  animation: swayX var(--dx,8s) ease-in-out infinite alternate;
+  animation-delay: var(--delay,0s);
+}
+.bob{
+  will-change:transform;
+  animation: bobY var(--dy,6s) ease-in-out infinite alternate;
+  animation-delay: var(--delay2,0s);
+}
+@keyframes swayX{ from{ transform:translateX(calc(var(--amp,20px)*-1)); }
+                  to  { transform:translateX(var(--amp,20px)); } }
+@keyframes bobY { from{ transform:translateY(calc(var(--bobamp,16px)*-1)) rotate(var(--rot,-8deg)); }
+                  to  { transform:translateY(var(--bobamp,16px)) rotate(var(--rot,8deg)); } }
+.flower{ display:block; width:var(--size,48px); height:auto; opacity:var(--op,.3); }
+
+@media (prefers-reduced-motion: reduce){
+  .drift,.bob{ animation:none !important; }
+  .parallax{ transition:none !important; }
+}
+
+/* --- スクロールを乗っ取る smooth wrapper --------------------------------- */
+#wrap{ position:relative; z-index:1; }
+html.smooth #wrap{ position:fixed; top:0; left:0; width:100%; will-change:transform; }
+
+/* --- スマホの時だけ改行するタグ。使い方: <br class="sp"> ------------------- */
+br.sp{ display:none; }
+@media (max-width: 768px){
+  br.sp{ display:inline; }
+}
+
+/* =========================================================================
+   SECTIONS
+   ========================================================================= */
+.section{
+  min-height:100vh;
+  display:flex; flex-direction:column; justify-content:center;
+  align-items:center; text-align:center;
+  padding:14vh 7vw; position:relative;
+}
+.inner{ width:100%; max-width:var(--maxw); }
+.eyebrow{
+  letter-spacing:.22em;
+  font-size:clamp(13px,1.6vw,16px); color:var(--about-muted);
+  margin-bottom:2.2em;
+}
+.heading{ font-weight:900; line-height:1.5; margin-bottom:1.4em; font-size:clamp(22px,3.4vw,34px); }
+p.copy{ font-size:clamp(16px,2.1vw,20px); }
+
+/* --- キャプションの光の帯（黒 → ピンク → 黒、と左から右へ通り過ぎていく帯）------
+   --p（0〜1）をJSが既存のrAFループ内で更新する。帯の中心位置は --p をそのまま
+   0%〜100%に対応させず、-15%〜115%まで広げてマッピングすることで、文字の
+   両端（帯が来る前／通り過ぎた後）は必ず通常の文字色（--about-ink）に戻る。
+   transformは使わず、color/background-clip:text のみで表現する */
+.copy .line{
+  --p: 0;
+  --sweep-pos: calc(var(--p) * 130% - 15%);
+  background-image: linear-gradient(
+    90deg,
+    var(--about-ink) 0%,
+    var(--about-ink) calc(var(--sweep-pos) - 14%),
+    var(--salmon) calc(var(--sweep-pos) - 6%),
+    var(--sweep-glow) var(--sweep-pos),
+    var(--salmon) calc(var(--sweep-pos) + 6%),
+    var(--about-ink) calc(var(--sweep-pos) + 14%),
+    var(--about-ink) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce){
+  /* スイープ演出を無効化し、最初から通常の文字色で表示する */
+  .copy .line{
+    background-image: none;
+    background-clip: initial; -webkit-background-clip: initial;
+    color: var(--about-ink); -webkit-text-fill-color: var(--about-ink);
+  }
+}
+
+/* HERO */
+.hero{ padding-left:4vw; padding-right:4vw; }
+.hero .inner{ max-width:100%; }   /* 通常セクションの880px上限を外し、見出しが横幅をより使えるようにする */
+.hero .big{
+  font-weight:900; line-height:1.35; font-size:clamp(21px,6.2vw,72px);
+  white-space:nowrap;   /* 「パーティーみたいな毎日を!」が途中で改行されないように */
+}
+.hero .tagline{ margin-top:3.5em; color:var(--about-muted); font-size:clamp(12px,1.6vw,14px); line-height:2; }
+.hero .tagline-logo{ display:block; width:300px; max-width:60vw; height:auto; margin:0 auto 1em; }
+.hero .tagline b{ letter-spacing:.14em; font-weight:400; color:var(--about-ink); font-size:1.5em; display:block; margin-bottom:.4em; }
+
+/* --- 対象セクションに来るたびに、下からカラフルな紙吹雪が飛び出す演出 --------
+   JSが .confetti-piece をランダムな色・角度・速度で都度生成し、アニメーション
+   終了後に取り除く。prefers-reduced-motion では発生させない（JS側で制御）。
+   #wrap の外＝ビューポート固定（#field と同じ構造）に置く：#wrap は毎フレーム
+   transformが更新され続けるため、その内側に置くとモバイル端末で子要素の
+   CSSアニメーションが再生されない（描画がリセットされる）不具合があったため。
+   対象セクション側は <section ... data-confetti> を付けるだけでよい。 */
+.confetti-layer{ position:fixed; inset:0; z-index:6; pointer-events:none; overflow:hidden; }
+.confetti-piece{
+  position:absolute;
+  bottom:0;
+  width:var(--csize,10px); height:calc(var(--csize,10px) * .4);
+  background:var(--ccolor,var(--salmon));
+  opacity:0;
+  will-change:transform,opacity;
+  animation: confettiBurst var(--cdur,1.6s) cubic-bezier(.16,.84,.44,1) var(--cdelay,0s) 1 both;
+}
+@keyframes confettiBurst{
+  0%   { transform:translate3d(0,0,0) rotate(0deg); opacity:0; }
+  8%   { opacity:1; }
+  55%  { transform:translate3d(var(--cx,0px), calc(var(--cheight,60vh) * -1), 0) rotate(var(--crot,540deg)); opacity:1; }
+  100% { transform:translate3d(calc(var(--cx,0px) * 1.3), 20vh, 0) rotate(calc(var(--crot,540deg) * 1.4)); opacity:0; }
+}
+
+/* 紙吹雪と同じ挙動（confettiBurst）で、キャラクター画像も一緒に飛ばす場合に使用。
+   対象セクション側は <section ... data-confetti data-confetti-chars="6"> のように
+   飛ばす数を指定するだけでよい */
+.confetti-char{
+  position:absolute;
+  bottom:0;
+  width:var(--csize,64px); height:auto;
+  opacity:0;
+  will-change:transform,opacity;
+  animation: confettiBurst var(--cdur,1.6s) cubic-bezier(.16,.84,.44,1) var(--cdelay,0s) 1 both;
+}
+
+/* VIBES = 浴びせる1枚 */
+.vibes .punch{ font-weight:900; line-height:1.5; font-size:clamp(26px,4.6vw,52px); }
+.vibes-logo{ letter-spacing:.2em; color:var(--salmon); font-size:clamp(16px,2vw,22px); margin-bottom:1.6em; }
+
+/* RESIDENTS chips */
+.chips{ display:flex; flex-wrap:wrap; gap:.7em; justify-content:center; margin-top:2.6em; }
+.chip{
+  border:1.5px solid var(--about-line); border-radius:999px;
+  padding:.5em 1.2em; font-weight:700; font-size:clamp(14px,1.9vw,17px);
+}
+.chip.marty{ background:var(--salmon); border-color:var(--salmon); color:#fff; }
+
+/* ACTIVITIES */
+.acts{ display:grid; gap:3.2em; margin-top:1em; text-align:left; }
+.act .no{ letter-spacing:.1em; color:var(--wasabi); font-size:14px; }
+.act h3{ font-weight:900; font-size:clamp(18px,2.4vw,22px); margin:.3em 0 .6em; }
+.act p{ color:var(--about-muted); }
+.act a{ color:var(--salmon); text-decoration:none; font-weight:700; }
+.act a:hover{ text-decoration:underline; }
+
+/* 1セクション=1画面のフルページ送りのため、モバイルは縦の余白・行間を詰めて
+   画面高に収まりやすくする（特にACTIVITIESは3ブロック縦積みで超過しやすい） */
+@media (max-width: 768px){
+  .section{ padding:8vh 6vw; }
+  .eyebrow{ margin-bottom:1.1em; }
+  .heading{ margin-bottom:.8em; }
+
+  .acts{ gap:1.1em; margin-top:.6em; }
+  .act .no{ font-size:11px; }
+  .act h3{ font-size:16px; margin:.15em 0 .25em; }
+  .act p{ font-size:13px; line-height:1.5; }
+  .act a{ font-size:12.5px; }
+  /* ヘッダーのスクロール追従マスクを外す設定は、サイト共通の ../style.css 側に
+     移動し、全ページ共通の挙動にしています */
+}
+
+@media (max-width: 480px){
+  .section{ padding:6vh 6vw; }
+  .acts{ gap:.9em; }
+}
+
+/* THE TWO / JOIN links */
+.members{ display:grid; gap:1.2em; margin:1.5em 0 2.4em; }
+.member{ display:flex; align-items:center; justify-content:center; gap:.6em; }
+.member-icon{ width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.member b{ font-size:1.15em; }
+.member span{ color:var(--about-muted); margin-left:0; }
+.member span a{ color:inherit; text-decoration:underline; text-decoration-color:var(--about-line); text-underline-offset:3px; }
+.member span a:hover{ color:var(--salmon); text-decoration-color:var(--salmon); }
+.links a, .sns a{ color:var(--salmon); text-decoration:none; font-weight:700; border-bottom:2px solid transparent; }
+.links a:hover, .sns a:hover{ border-color:var(--salmon); }
+.story-pending{ color:var(--about-muted); }
+.sns{ display:flex; flex-direction:column; gap:.6em; margin-top:2em; letter-spacing:.08em; font-size:clamp(16px,2vw,20px); }
+.footnote{ margin-top:4em; font-size:12px; color:var(--about-muted); }
+.footnote a{ color:var(--salmon); text-decoration:none; border-bottom:1px solid var(--salmon); }
+
+/* =========================================================================
+   REVEAL ── そのセクションが表示された時に、行ごとに少しずつ遅れてフェードイン。
+   一度表示された行はそのまま表示を保つ（スクロール位置による常時判定はしない）。
+   ※ 以前はスクロール位置から毎フレーム不透明度を計算していたが、フルページ
+      送り（1セクション=1画面）にしたことで、画面下寄りの行が「進入しきらない」
+      位置に留まり続けて文字が薄いまま固定される不具合があったため変更。
+   ========================================================================= */
+html.anim .reveal{
+  opacity:0; transform:translateY(42px);
+  transition: opacity .7s ease, transform .7s ease;
+  will-change:opacity,transform;
+}
+html.anim .reveal.visible{ opacity:1; transform:translateY(0); }
+.line{ display:block; }                 /* 1行＝1レビール要素にして自然なスタガーを作る */
+
+.scrollcue{ position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:3;
+  font-family:"Bebas Neue"; letter-spacing:.2em; font-size:12px; color:var(--about-muted); animation:bob 1.8s ease-in-out infinite; }
+@keyframes bob{ 0%,100%{ transform:translate(-50%,0);} 50%{ transform:translate(-50%,7px);} }
+
+/* reduced-motion：演出を全部止めて素の可読状態に */
+@media (prefers-reduced-motion: reduce){
+  html.anim .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+  .scrollcue{ display:none; }
+}
+
+/* フッターを #wrap 内に含めるための余白調整（サイト共通フッターをそのまま流用） */
+#wrap footer{ position:relative; z-index:1; }
+</style>
+</head>
+<body>
+<header>
+  <a href="./index.html" class="logo"><img src="../image/logo.png" width="90px"></a>
+  <nav>
+    <ul>
+      <li><a href="./index.html#WORK">WORK</a></li>
+      <li><a href="./about.html">ABOUT</a></li>
+      <li><a href="./information.html">INFORMATION</a></li>
+      <li><a href="./archive.html">ARCHIVE</a></li>
+      <li><a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">SHOP</a></li>
+      <li><a href="./index.html#CONTACT">CONTACT</a></li>
+    </ul>
+  </nav>
+  <div class="header-right">
+    <label class="dark-mode-toggle">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="dark-mode-slider"></span>
+    </label>
+    <button class="mobile-menu-btn" id="mobileMenuOpen">☰</button>
+  </div>
+</header>
+
+<!-- モバイルメニュー -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-header">
+    <button class="close-menu" id="mobileMenuClose">✕</button>
+  </div>
+  <ul>
+    <li><a href="./index.html#WORK">WORK</a></li>
+    <li><a href="./about.html">ABOUT</a></li>
+    <li><a href="./information.html">INFORMATION</a></li>
+    <li><a href="./archive.html">ARCHIVE</a></li>
+    <li><a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">SHOP</a></li>
+    <li><a href="./index.html#CONTACT">CONTACT</a></li>
+  </ul>
+  <div class="mobile-menu-footer">
+    <label class="dark-mode-toggle">
+      <input type="checkbox" id="darkModeToggleMobile">
+      <span class="dark-mode-slider"></span>
+    </label>
+  </div>
+</div>
+
+<!-- ふわふわ漂うキャラクターの背景（wrapperの外＝ビューポート固定）。中身はJSが生成 -->
+<div class="flower-field" id="field" aria-hidden="true"></div>
+
+<!-- 紙吹雪（wrapperの外＝ビューポート固定）。中身はJSが生成。
+     data-confetti を付けたセクションに来るたびにここで発生する -->
+<div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+<div id="wrap">
+
+  <!-- 01 HERO -->
+  <section class="section hero" id="hero" data-confetti>
+    <div class="inner">
+      <div class="big">
+        <span class="line reveal">パーティーみたいな毎日を!</span>
+        <span class="line reveal">毎日を楽しく、</span>
+        <span class="line reveal">毎日をパーティーに。</span>
+      </div>
+      <div class="tagline reveal">
+        <img class="tagline-logo" src="../image/ssp_logo.png" alt="Super Sushi Party">
+        <b>SUPER SUSHI PARTY</b>
+        あべゆうか × 松本伊代による<br>アニメーションやら何やらの制作ユニット
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 ABOUT THE UNIT -->
+  <section class="section" id="unit">
+    <div class="inner">
+      <div class="eyebrow reveal">ABOUT THE UNIT</div>
+      <div class="heading reveal">WE ARE SUPER SUSHI PARTY<br>（スーパースシパーティー）！！！です。</div>
+      <p class="copy">
+        <span class="line reveal">わりとハッピーで、かわいくてまぬけなものが</span>
+        <span class="line reveal">毎日にあふれかえっていてほしい！</span>
+        <span class="line reveal">それを実行すべく、わたしたちは集まり、<br class="sp">アニメーションを作り始めました。</span>
+        <span class="line reveal">毎日の暮らしの延長上に、<br class="sp">パーティーはつながっています。</span>
+        <span class="line reveal">つまり私たちの毎日は、<br class="sp">パーティーの一部なのです。</span>
+        <span class="line reveal">毎日を楽しく、毎日をパーティーに。</span>
+        <span class="line reveal">今と昔と未来、いろんな日常を繋いだ先にある<br class="sp">アニメーションを作ります。</span>
+        <span class="line reveal">SUPER SUSHI PARTYのアニメーションを<br class="sp">見た人は時間•時空•次元を超えて、</span>
+        <span class="line reveal">同じパーティーに参加しているのです！</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 03 寿司パーティー -->
+  <section class="section" id="sushi-party">
+    <div class="inner">
+      <div class="eyebrow reveal">WHY SUSHI</div>
+      <div class="heading reveal">なんで、”寿司”パーティー<br class="sp">なのか。</div>
+      <p class="copy">
+        <span class="line reveal">「寿司」と聞くと、ちょっと気分が上がる。</span>
+        <span class="line reveal">日本人の潜在意識的に、寿司という存在が気分を<br class="sp">上げてくれるトリガーになっているのです。</span>
+        <span class="line reveal">だから、わたしたちは寿司を選びました。</span>
+        <span class="line reveal">日常のなかにある、<br class="sp">日本人なら誰もが知っている祝祭。</span>
+        <span class="line reveal">誰もが、いつでも参加できるパーティー。</span>
+        <span class="line reveal">「寿司」の二文字を聞いた瞬間の、あの高揚感。</span>
+        <span class="line reveal">「スシパーティー」の響きみたいに、<br class="sp">毎日を過ごせたら最高ですよね！</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 04 RESIDENTS -->
+  <section class="section" id="residents">
+    <div class="inner">
+      <div class="eyebrow reveal">THE RESIDENTS</div>
+      <div class="heading reveal">スーパースシパーティーの<br class="sp">住人たち。</div>
+      <p class="copy">
+        <span class="line reveal">わたしたちが作る世界には、<br class="sp">たくさんの住人がいます。</span>
+        <span class="line reveal">マグロも、サーモンも、エビも、タマゴも。<br class="sp">いつもパーティーをする気満々です！</span>
+        <span class="line reveal">その中心にいるのが、マーティーたち。<br class="sp">スーパースシパーティーの住人です。</span>
+        <span class="line reveal">日本ならではの文化や気候、日々の暮らしを、<br class="sp">みてくれるみんなと同じように<br class="sp">過ごしています。</span>
+        <span class="line reveal">これからもきっと、<br class="sp">新しい住人が増えていきます。</span>
+        <span class="line reveal">さああなたも、お皿の前に座ってください。</span>
+        <span class="line reveal">パーティーは、いつでも始められるのですから<br class="sp">まっています。</span>
+      </p>
+      <!--<div class="chips reveal">
+        <span class="chip">マグロ</span><span class="chip">サーモン</span>
+        <span class="chip">エビ</span><span class="chip">タマゴ</span>
+        <span class="chip marty">マーティー</span>
+      </div>-->
+    </div>
+  </section>
+
+  <!-- 05 VIBES -->
+  <section class="section vibes" id="vibes" data-confetti data-confetti-chars="6">
+    <div class="inner">
+      <div class="vibes-logo reveal">SUPER SUSHI PARTY</div>
+      <div class="punch">
+        <span class="line reveal">わりとハッピーで、</span>
+        <span class="line reveal">かわいくてまぬけで、</span>
+        <span class="line reveal">アゲな毎日！</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 THE TWO -->
+  <section class="section" id="two">
+    <div class="inner">
+      <div class="eyebrow reveal">THE TWO</div>
+      <div class="heading reveal">毎日をパーティだと<br class="sp">思ってるひとたち。</div>
+      <div class="members">
+        <div class="member reveal"><img class="member-icon" src="../image/about/abe_icon.jpg" alt="あべゆうか"><b>あべゆうか</b><span><a href="https://www.instagram.com/abeyu.ka/" target="_blank" rel="noopener">@abeyu.ka</a></span></div>
+        <div class="member reveal"><img class="member-icon" src="../image/about/iyomtm_icon.jpg" alt="松本伊代"><b>松本伊代</b><span><a href="https://www.instagram.com/iyomtmt/" target="_blank" rel="noopener">@iyomtmt</a></span></div>
+      </div>
+      <p class="copy reveal">似ているような、似ていないような２人。<br>化学反応を楽しみながら、いつでもパーティーを続けていますよ！</p>
+      <!-- ★5未決定：それぞれのHP・作品をサイト内で見られるようにしたいという要望あり。
+           STORY / メンバー個別ページは別タスクとして方針決定後に追加。それまでリンクなしで表示。 -->
+      <div class="links reveal" style="margin-top:2em">二人のもっと深い話 → <span class="story-pending">STORY（近日公開）</span></div>
+    </div>
+  </section>
+
+  <!-- 08 ACTIVITIES -->
+  <section class="section" id="activities">
+    <div class="inner">
+      <div class="eyebrow reveal">ACTIVITIES</div>
+      <div class="acts">
+        <div class="act reveal">
+          <div class="no">01 — ANIMATION</div>
+          <h3>アニメーション。</h3>
+          <p>月曜も金曜も、雨でも晴れでも、住人たちは今日もどこかで踊っています。SNSで、毎週新作を更新中。</p>
+          <a href="./index.html#WORK">WORKを見る →</a>
+        </div>
+        <div class="act reveal">
+          <div class="no">02 — EVENTS</div>
+          <h3>リアルでも、パーティー。</h3>
+          <p>展示やイベント出展など、精力的に参加しています。みなさまに会えるのをお待ちしています！</p>
+          <a href="./information.html">INFORMATIONを見る →</a>
+        </div>
+        <div class="act reveal">
+          <div class="no">03 — GOODS</div>
+          <h3>身に付けて、毎日パーティー。</h3>
+          <p>Tシャツ、ステッカー、ZINE、日常の中で使えるものを少しずつ作っています。</p>
+          <a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">ECサイトへ →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 JOIN US -->
+  <section class="section" id="join">
+    <div class="inner">
+      <div class="heading reveal" style="font-size:clamp(28px,5vw,54px)">一緒にパーティー<br class="sp">しましょう！</div>
+      <p class="copy">
+        <span class="line reveal">スシアニメーション更新中。<br class="sp">その他短編作品も鋭意製作中。</span>
+        <span class="line reveal">わたしたちのパーティーが気になったら、<br class="sp">フォローしてみてくださいね。</span>
+      </p>
+      <div class="sns reveal">
+        <a href="https://www.instagram.com/super.sushi.party/" target="_blank" rel="noopener">Instagram　@super.sushi.party</a>
+        <a href="https://x.com/supepsushiparty?s=21" target="_blank" rel="noopener">X (Twitter)　@supepsushiparty</a>
+        <a href="https://www.tiktok.com/@supersushiparty?_t=ZS-8vIvC6ZwRQm&_r=1" target="_blank" rel="noopener">TikTok　@supersushiparty</a>
+        <a href="./index.html#CONTACT">Contact →</a>
+      </div>
+      <div class="footnote reveal">お仕事のご依頼 → <a href="./index.html#CONTACT">See our works</a></div>
+    </div>
+  </section>
+
+  <!-- フッター（サイト共通） -->
+  <footer>
+    <div class="social-links">
+      <a href="https://www.instagram.com/super.sushi.party/" target="_blank" class="social-icon" aria-label="Instagram">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+      </a>
+      <a href="https://x.com/ssp_official" target="_blank" class="social-icon" aria-label="X (Twitter)">
+        <span class="x-text">𝕏</span>
+      </a>
+      <a href="https://www.tiktok.com/@super_sushi_party" target="_blank" class="social-icon" aria-label="TikTok">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path>
+        </svg>
+      </a>
+    </div>
+    <div class="copyright">© 2026 Copyright SuperSushiParty. All Rights Reserved.</div>
+  </footer>
+
+</div><!-- /#wrap -->
+
+<!-- キャラクター1体ぶんのテンプレート（JSがランダムな画像・位置で複製） -->
+<template id="tpl">
+  <div class="parallax">
+    <div class="drift">
+      <div class="bob">
+        <img class="flower" alt="">
+      </div>
+    </div>
+  </div>
+</template>
+
+<div class="scrollcue">SCROLL</div>
+
+<script src="../script.js"></script>
+<script>
+/* =========================================================================
+   ABOUTページ スクロールエンジン
+   ① 1スクロール(ホイール/スワイプ)＝次/前のセクションへ遷移（イーズ付き）
+   ② 背景キャラクター：セクション遷移のたびに、表示中の10体をフェードアウトし
+      ランダムな新しい10体を画面下から浮かび上がらせて入れ替える（回転はしない）
+   ③ 行ごとのフェードイン(reveal)
+   prefers-reduced-motion が有効な環境では①③の演出とページ乗っ取りを行わず、
+   通常のネイティブスクロールに任せる（.reveal は CSS 側で常時表示になる）
+   ========================================================================= */
+(function(){
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const html   = document.documentElement;
+  const wrap   = document.getElementById('wrap');
+  const header = document.querySelector('header');
+
+  // --- 背景キャラクター（/image/about/ の PNG からランダムに10体ずつ入れ替え）---
+  const field = document.getElementById('field');
+  const tpl   = document.getElementById('tpl');
+  const rand  = (a,b)=> a + Math.random()*(b-a);
+  const IMAGE_TOTAL = 44;
+  const IMAGES = Array.from({length: IMAGE_TOTAL}, (_, i) =>
+    `../image/about/about_${String(i + 1).padStart(2, '0')}.png`
+  );
+  const BATCH_SIZE = window.innerWidth <= 768 ? 6 : 10;   // スマホは6体、PCは10体
+
+  // 配列からランダムにn個、重複なしで取り出す（Fisher–Yates シャッフルの先頭n個）
+  function sampleUnique(arr, n){
+    const copy = arr.slice();
+    for(let i = copy.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, n);
+  }
+
+  let activeBatch = [];
+
+  function spawnBatch(){
+    // 表示中のバッチをフェードアウトさせてから取り除く
+    const outgoing = activeBatch;
+    activeBatch = [];
+    for(const el of outgoing){
+      el.classList.remove('settled');
+      el.classList.add('exit');
+      setTimeout(()=> el.remove(), 750);
+    }
+
+    // 新しいBATCH_SIZE体を、同じ画像が重複しないように選んで生成し、画面下から浮かび上がらせる
+    const batchImages = sampleUnique(IMAGES, BATCH_SIZE);
+    for(let i=0;i<BATCH_SIZE;i++){
+      const node  = tpl.content.cloneNode(true);
+      const px    = node.querySelector('.parallax');
+      const drift = node.querySelector('.drift');
+      const bobEl = node.querySelector('.bob');
+      const fl    = node.querySelector('.flower');
+
+      fl.src = batchImages[i];
+      px.style.left = rand(-4,96)+'vw';
+      px.style.top  = rand(6,82)+'vh';
+
+      // アイドルの揺れ（横と上下で別周期）
+      drift.style.setProperty('--dx',   rand(6,12).toFixed(2)+'s');
+      drift.style.setProperty('--amp',  rand(12,40).toFixed(0)+'px');
+      drift.style.setProperty('--delay',(-rand(0,8)).toFixed(2)+'s');
+      bobEl.style.setProperty('--dy',     rand(4,9).toFixed(2)+'s');
+      bobEl.style.setProperty('--bobamp', rand(10,28).toFixed(0)+'px');
+      bobEl.style.setProperty('--rot',    rand(5,14).toFixed(0)+'deg');
+      bobEl.style.setProperty('--delay2',(-rand(0,6)).toFixed(2)+'s');
+
+      fl.style.setProperty('--size', rand(40,110).toFixed(0)+'px');
+      fl.style.setProperty('--op',   rand(.15,.35).toFixed(2));
+
+      if(reduce){
+        px.classList.add('settled');   // reduced-motion では動かさずそのまま表示
+      } else {
+        px.classList.add('enter');
+      }
+
+      field.appendChild(node);
+
+      if(!reduce){
+        // 強制リフロー後に settled へ切り替え、下から浮かび上がるトランジションを発火
+        void px.offsetWidth;
+        requestAnimationFrame(()=>{
+          px.classList.remove('enter');
+          px.classList.add('settled');
+        });
+      }
+
+      activeBatch.push(px);
+    }
+  }
+
+  spawnBatch();   // 初期表示の10体
+
+  if(reduce) return;   // reduced-motion環境：ページ乗っ取り・入れ替え演出はここで終了（通常スクロールに任せる）
+
+  html.classList.add('anim');
+  html.classList.add('smooth');
+
+  // --- セクション・ページング：1スクロールで次/前のセクションへ ---------------
+  const stops = [...document.querySelectorAll('#wrap .section, #wrap footer')];
+  let stopTops = [];
+  function measure(){ stopTops = stops.map(el => el.offsetTop); }
+  measure();
+  window.addEventListener('resize', measure);
+  window.addEventListener('load', measure);
+
+  const cue = document.querySelector('.scrollcue');
+  let currentIndex = 0;
+  let target = 0, current = 0;
+
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  // タイマーでロックするのではなく、実際のアニメーション状態（current が target に
+  // 到達しきったかどうか）だけを見て次の入力を受け付ける。遷移中は無視し、
+  // 1セクション分の移動が完了したら次のスクロールで次のセクションへ進める。
+  function isSettled(){ return Math.abs(target - current) < 0.5; }
+
+  // セクションごとの .reveal 要素をグルーピングし、そのセクションが最初に
+  // アクティブになったタイミングで一度だけ、行ごとに少し遅らせて表示する
+  const revealGroups = stops.map(stop => [...stop.querySelectorAll('.reveal')]);
+  const revealedIndexes = new Set();
+  function revealSection(i){
+    if(revealedIndexes.has(i)) return;
+    revealedIndexes.add(i);
+    const group = revealGroups[i] || [];
+    group.forEach((el, idx)=>{
+      el.style.transitionDelay = (idx * 70) + 'ms';
+      el.classList.add('visible');
+    });
+  }
+  requestAnimationFrame(()=> revealSection(0));   // HERO は読み込み後すぐに表示
+
+  // キャプション（.copy .line）の光の帯：セクションごとにグルーピングしておき、
+  // 既存のrAFループ（frame関数）内で --p を更新する。新しいループは作らない
+  const sweepGroups = stops.map(stop => [...stop.querySelectorAll('.copy .line')]);
+
+  // 紙吹雪：data-confetti を付けたセクション（HERO・VIBESなど）に来るたびに、
+  // 下からカラフルな紙吹雪を飛び出させる。レイヤーは #field と同じく #wrap の
+  // 外にある単一のビューポート固定要素（そのセクションが画面を占めている間に
+  // 発生させるので、これで全セクションに対応できる）
+  const confettiLayer = document.getElementById('confettiLayer');
+  const confettiIndexes = new Set(
+    stops.map((el, i) => el.hasAttribute && el.hasAttribute('data-confetti') ? i : -1).filter(i => i >= 0)
+  );
+  // data-confetti-chars="6" のように指定したセクションでは、紙吹雪と一緒に
+  // ランダムなキャラクター画像も同じ数だけ飛ばす（重複なしで選ぶ）
+  const confettiCharCounts = new Map();
+  stops.forEach((el, i) => {
+    if(el.hasAttribute && el.hasAttribute('data-confetti-chars')){
+      confettiCharCounts.set(i, parseInt(el.getAttribute('data-confetti-chars'), 10) || 0);
+    }
+  });
+  const CONFETTI_COLORS = ['#ff5d73', '#ffd23f', '#1f9e8b', '#a8e6cf', '#c3b1e1', '#fff4ef'];
+  let confettiCleanupTimer = null;
+  function burstConfetti(charCount){
+    if(!confettiLayer) return;
+    confettiLayer.innerHTML = '';
+    const count = window.innerWidth <= 768 ? 26 : 42;
+    for(let i=0;i<count;i++){
+      const piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      piece.style.setProperty('--csize', rand(6,14).toFixed(1) + 'px');
+      piece.style.setProperty('--ccolor', CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]);
+      piece.style.setProperty('--cx', rand(-160,160).toFixed(0) + 'px');
+      piece.style.setProperty('--crot', rand(280,720).toFixed(0) + 'deg');
+      piece.style.setProperty('--cheight', rand(55,95).toFixed(0) + 'vh');
+      piece.style.setProperty('--cdur', rand(1.3,2.1).toFixed(2) + 's');
+      piece.style.setProperty('--cdelay', rand(0,0.35).toFixed(2) + 's');
+      piece.style.left = rand(4,96) + '%';
+      confettiLayer.appendChild(piece);
+    }
+    if(charCount){
+      const chosenImages = sampleUnique(IMAGES, charCount);   // 同じ画像が重複しないように選ぶ
+      for(const src of chosenImages){
+        const img = document.createElement('img');
+        img.className = 'confetti-char';
+        img.src = src;
+        img.alt = '';
+        img.style.setProperty('--csize', rand(50,90).toFixed(0) + 'px');
+        img.style.setProperty('--cx', rand(-160,160).toFixed(0) + 'px');
+        img.style.setProperty('--crot', rand(280,720).toFixed(0) + 'deg');
+        img.style.setProperty('--cheight', rand(55,95).toFixed(0) + 'vh');
+        img.style.setProperty('--cdur', rand(1.3,2.1).toFixed(2) + 's');
+        img.style.setProperty('--cdelay', rand(0,0.35).toFixed(2) + 's');
+        img.style.left = rand(4,96) + '%';
+        confettiLayer.appendChild(img);
+      }
+    }
+    clearTimeout(confettiCleanupTimer);
+    confettiCleanupTimer = setTimeout(()=>{ confettiLayer.innerHTML = ''; }, 2600);
+  }
+  if(confettiIndexes.has(0)) burstConfetti(confettiCharCounts.get(0) || 0);   // HERO は読み込み時にも発生させる
+
+  function goTo(i){
+    i = clamp(i, 0, stopTops.length - 1);
+    if(i === currentIndex) return;
+    currentIndex = i;
+    target = stopTops[currentIndex];
+
+    revealSection(currentIndex);
+    if(confettiIndexes.has(currentIndex)) burstConfetti(confettiCharCounts.get(currentIndex) || 0);   // 対応するセクションなら紙吹雪
+
+    spawnBatch();   // 背景キャラクターを新しい10体に入れ替え
+    if(header) header.classList.toggle('scrolled', currentIndex > 0);
+    if(cue) cue.style.opacity = currentIndex === 0 ? 1 : 0;
+  }
+
+  window.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    if(!isSettled()) return;              // 前のセクションへの移動が終わるまでは無視
+    if(Math.abs(e.deltaY) < 4) return;    // ごく小さな入力は無視
+    goTo(currentIndex + (e.deltaY > 0 ? 1 : -1));
+  }, {passive:false});
+
+  let touchStartY = null;
+  window.addEventListener('touchstart', (e)=>{ touchStartY = e.touches[0].clientY; }, {passive:true});
+  window.addEventListener('touchmove', (e)=>{ e.preventDefault(); }, {passive:false});
+  window.addEventListener('touchend', (e)=>{
+    if(touchStartY === null){ return; }
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    touchStartY = null;
+    if(!isSettled()) return;              // 前のセクションへの移動が終わるまでは無視
+    if(Math.abs(dy) < 40) return;         // 誤操作防止のしきい値
+    goTo(currentIndex + (dy > 0 ? 1 : -1));
+  }, {passive:true});
+
+  // --- キャプションの光の帯：要素の上端が画面下80%で0、画面中央40%で1になるよう
+  //     getBoundingClientRect() から可逆に算出する（止めれば止まる／戻せば戻る）。
+  //     CSS側で --p=1 は「帯が通り過ぎて黒に戻った状態」になるようマッピングして
+  //     いるが、段落が長く下の方の行の最終停止位置が40〜80%の帯の中に留まる場合、
+  //     実位置だけで計算するとピンクの帯が途中で止まったまま固まってしまう。
+  //     そこで、着地（isSettled）に近づくほど p を 1 側へなめらかに寄せていき、
+  //     アクティブなセクションは必ず「黒→ピンク→黒」を最後まで通り抜けてから
+  //     止まるようにする（着地の瞬間に色がカクッと飛ばないよう、残り距離に応じて
+  //     連続的にブレンドする）。
+  //     さらに、実際に画面に反映する値（--p）は算出した目標値へ毎フレーム
+  //     じわっと近づけるようにし（ページ送り自体の速さとは別に）光り方だけを
+  //     ゆっくりにしている。スマホはPCよりもさらに小さい係数でより遅くする。
+  const isMobileViewport = window.innerWidth <= 768;
+  const SWEEP_EASE = isMobileViewport ? 0.02 : 0.045;
+
+  function updateSweep(){
+    const H = window.innerHeight;
+    const settleAmt = 1 - clamp(Math.abs(target - current) / 40, 0, 1);   // 着地間際ほど1に近づく
+    sweepGroups.forEach((lines, idx)=>{
+      const isActive = idx === currentIndex;
+      for(const el of lines){
+        const r = el.getBoundingClientRect();
+        let targetP = clamp((H*0.8 - r.top) / (H*0.8 - H*0.4), 0, 1);
+        if(isActive) targetP = targetP + (1 - targetP) * settleAmt;   // 着地に向けて必ず1(=黒に戻る)へ収束
+
+        const prevP = el.__sweepP === undefined ? targetP : el.__sweepP;
+        const p = prevP + (targetP - prevP) * SWEEP_EASE;   // 光の帯自体の動きをゆっくり追従させる
+        el.__sweepP = p;
+        el.style.setProperty('--p', p.toFixed(3));
+      }
+    });
+  }
+
+  // --- rAF ループ：ページングのイーズ・キャプションの光の帯を同じループで更新 ---
+  // （reveal はセクション切替時に個別トリガー。新しいrAFループは増やさない）
+  function frame(){
+    current += (target - current) * 0.1;                 // ← 数字を下げるほど重く滑る
+    wrap.style.transform = `translate3d(0,${-current}px,0)`;
+    updateSweep();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABOUT scroll demo | Super Sushi Party</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Bebas Neue = 既存サイトと同じラテン見出し / Zen Maru Gothic = ゆるく丸い和文（住人ブランドの質感に寄せる） -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================================
+   THEME TOKENS （既存 style.css の変数に置き換えて使う想定）
+   ========================================================================= */
+:root{
+  --bg:        #FBFAF7;   /* しゃりの白（クリーム系クリシェを避けた僅かに冷たい白）*/
+  --ink:       #1a1712;
+  --muted:     #8a8378;
+  --salmon:    #ff5d73;   /* アクセント1：サーモン／握りのピンク */
+  --wasabi:    #1f9e8b;   /* アクセント2：わさびのグリーン */
+  --line:      rgba(26,23,18,.14);
+  --maxw:      880px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141210; --ink:#f4efe6; --muted:#9a9184; --line:rgba(244,239,230,.16); }
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ scroll-behavior:auto; }           /* smooth化はJSが担うので native smooth はオフ */
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Zen Maru Gothic", system-ui, sans-serif;
+  font-weight:500; line-height:1.9;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* --- パララックスの背景レイヤー（wrapperの外＝ビューポート固定）--------------- */
+#bg{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.blob{ position:absolute; border-radius:50%; filter:blur(6px); opacity:.5; will-change:transform; }
+.b1{ width:44vmin; height:44vmin; left:-8vmin; top:12vh;  background:radial-gradient(circle at 40% 40%, var(--salmon), transparent 70%); }
+.b2{ width:38vmin; height:38vmin; right:-6vmin; top:120vh; background:radial-gradient(circle at 50% 50%, var(--wasabi), transparent 70%); opacity:.4; }
+.b3{ width:30vmin; height:30vmin; left:20vw; top:230vh; background:radial-gradient(circle at 50% 50%, var(--salmon), transparent 70%); opacity:.35; }
+.dot{ position:absolute; width:14px; height:14px; border-radius:50%; background:var(--wasabi); opacity:.5; will-change:transform; }
+
+/* --- スクロールを乗っ取る smooth wrapper --------------------------------- */
+#wrap{ position:relative; z-index:1; }
+html.smooth #wrap{ position:fixed; top:0; left:0; width:100%; will-change:transform; }
+
+/* =========================================================================
+   SECTIONS
+   ========================================================================= */
+.section{
+  min-height:100vh;
+  display:flex; flex-direction:column; justify-content:center;
+  align-items:center; text-align:center;
+  padding:14vh 7vw; position:relative;
+}
+.inner{ width:100%; max-width:var(--maxw); }
+.eyebrow{
+  font-family:"Bebas Neue", sans-serif; letter-spacing:.22em;
+  font-size:clamp(13px,1.6vw,16px); color:var(--muted);
+  margin-bottom:2.2em;
+}
+.heading{ font-weight:900; line-height:1.5; margin-bottom:1.4em; font-size:clamp(22px,3.4vw,34px); }
+p.copy{ font-size:clamp(16px,2.1vw,20px); }
+
+/* HERO */
+.hero .big{ font-weight:900; line-height:1.35; font-size:clamp(34px,7vw,76px); }
+.hero .tagline{ margin-top:3.5em; color:var(--muted); font-size:clamp(12px,1.6vw,14px); line-height:2; }
+.hero .tagline b{ font-family:"Bebas Neue"; letter-spacing:.14em; font-weight:400; color:var(--ink); font-size:1.5em; display:block; margin-bottom:.4em; }
+
+/* VIBES = 浴びせる1枚 */
+.vibes .punch{ font-weight:900; line-height:1.5; font-size:clamp(26px,4.6vw,52px); }
+.vibes .logo{ font-family:"Bebas Neue"; letter-spacing:.2em; color:var(--salmon); font-size:clamp(16px,2vw,22px); margin-bottom:1.6em; }
+
+/* RESIDENTS chips */
+.chips{ display:flex; flex-wrap:wrap; gap:.7em; justify-content:center; margin-top:2.6em; }
+.chip{
+  border:1.5px solid var(--line); border-radius:999px;
+  padding:.5em 1.2em; font-weight:700; font-size:clamp(14px,1.9vw,17px);
+}
+.chip.marty{ background:var(--salmon); border-color:var(--salmon); color:#fff; }
+
+/* ACTIVITIES */
+.acts{ display:grid; gap:3.2em; margin-top:1em; text-align:left; }
+.act .no{ font-family:"Bebas Neue"; letter-spacing:.1em; color:var(--wasabi); font-size:14px; }
+.act h3{ font-weight:900; font-size:clamp(18px,2.4vw,22px); margin:.3em 0 .6em; }
+.act p{ color:var(--muted); }
+
+/* THE TWO / JOIN links */
+.members{ display:grid; gap:1.2em; margin:1.5em 0 2.4em; }
+.member b{ font-size:1.15em; }
+.member span{ color:var(--muted); margin-left:.6em; }
+.links a, .sns a{ color:var(--salmon); text-decoration:none; font-weight:700; border-bottom:2px solid transparent; }
+.links a:hover, .sns a:hover{ border-color:var(--salmon); }
+.sns{ display:flex; flex-direction:column; gap:.6em; margin-top:2em; font-family:"Bebas Neue"; letter-spacing:.08em; font-size:clamp(16px,2vw,20px); }
+.footnote{ margin-top:4em; font-size:12px; color:var(--muted); }
+
+/* =========================================================================
+   ★ POLA-style REVEAL ── ここが移植の核
+   .reveal を付けた要素／各行が、スクロール位置に連動して
+   下から昇りながら現れ、上へ抜けるとやわらかく引く（＝呼吸する連続感）
+   ========================================================================= */
+html.anim .reveal{ opacity:0; transform:translateY(42px); will-change:opacity,transform; }
+.reveal{ transition:none; }             /* 動きはJSが毎フレーム駆動するので transition は使わない */
+.line{ display:block; }                 /* 1行＝1レビール要素にして自然なスタガーを作る */
+
+.scrollcue{ position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:3;
+  font-family:"Bebas Neue"; letter-spacing:.2em; font-size:12px; color:var(--muted); animation:bob 1.8s ease-in-out infinite; }
+@keyframes bob{ 0%,100%{ transform:translate(-50%,0);} 50%{ transform:translate(-50%,7px);} }
+
+/* reduced-motion：演出を全部止めて素の可読状態に */
+@media (prefers-reduced-motion: reduce){
+  html.anim .reveal{ opacity:1 !important; transform:none !important; }
+  .scrollcue{ display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- パララックス背景（wrapperの外＝ビューポート固定で速度差を付ける）-->
+<div id="bg">
+  <div class="blob b1" data-speed="-0.14"></div>
+  <div class="blob b2" data-speed="0.10"></div>
+  <div class="blob b3" data-speed="-0.08"></div>
+  <div class="dot" style="left:12vw;top:60vh"  data-speed="0.22"></div>
+  <div class="dot" style="left:82vw;top:40vh"  data-speed="-0.18"></div>
+  <div class="dot" style="left:68vw;top:150vh" data-speed="0.26"></div>
+  <div class="dot" style="left:24vw;top:190vh" data-speed="-0.2"></div>
+</div>
+
+<div id="wrap">
+
+  <!-- 01 HERO -->
+  <section class="section hero">
+    <div class="inner">
+      <div class="big">
+        <span class="line reveal">パーティーみたいな毎日を!</span>
+        <span class="line reveal">毎日を楽しく、</span>
+        <span class="line reveal">毎日をパーティーに。</span>
+      </div>
+      <div class="tagline reveal">
+        <b>SUPER SUSHI PARTY</b>
+        あべゆうか × 松本伊代による<br>アニメーションやら何やらの制作ユニット
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 ABOUT THE UNIT -->
+  <section class="section">
+    <div class="inner">
+      <div class="eyebrow reveal">ABOUT THE UNIT</div>
+      <div class="heading reveal">WE ARE SUPER SUSHI PARTY<br>（スーパースシパーティー）！！！です。</div>
+      <p class="copy">
+        <span class="line reveal">わりとハッピーで、かわいくてまぬけなものが</span>
+        <span class="line reveal">毎日にあふれかえっていてほしい！</span>
+        <span class="line reveal">それを実行すべく、わたしたちは集まり、アニメーションを作り始めました。</span>
+        <span class="line reveal">毎日の暮らしの延長上に、パーティーはつながっています。</span>
+        <span class="line reveal">つまり私たちの毎日は、パーティーの一部なのです。</span>
+        <span class="line reveal">毎日を楽しく、毎日をパーティーに。</span>
+        <span class="line reveal">今と昔と未来、いろんな日常を繋いだ先にあるアニメーションを作ります。</span>
+        <span class="line reveal">SUPER SUSHI PARTYのアニメーションを見た人は時間•時空•次元を超えて、</span>
+        <span class="line reveal">同じパーティーに参加しているのです！</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 03 寿司パーティー -->
+  <section class="section">
+    <div class="inner">
+      <div class="eyebrow reveal">WHY SUSHI</div>
+      <div class="heading reveal">なんで、〝寿司〟パーティーなのか。</div>
+      <p class="copy">
+        <span class="line reveal">「寿司」と聞くと、ちょっと気分が上がる。</span>
+        <span class="line reveal">日本人の潜在意識的に、寿司という存在が気分を上げてくれるトリガーになっているのです。</span>
+        <span class="line reveal">だから、わたしたちは寿司を選びました。</span>
+        <span class="line reveal">日常のなかにある、日本人なら誰もが知っている祝祭。</span>
+        <span class="line reveal">誰もが、いつでも参加できるパーティー。</span>
+        <span class="line reveal">「寿司」の二文字を聞いた瞬間の、あの高揚感。</span>
+        <span class="line reveal">「スシパーティー」の響きみたいに、毎日を過ごせたら最高ですよね！</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 04 RESIDENTS -->
+  <section class="section">
+    <div class="inner">
+      <div class="eyebrow reveal">THE RESIDENTS</div>
+      <div class="heading reveal">スーパースシパーティーの住人たち。</div>
+      <p class="copy">
+        <span class="line reveal">わたしたちが作る世界には、たくさんの住人がいます。</span>
+        <span class="line reveal">マグロも、サーモンも、エビも、タマゴも。いつもパーティーをする気満々です！</span>
+        <span class="line reveal">その中心にいるのが、マーティーたち。スーパースシパーティーの住人です。</span>
+        <span class="line reveal">日本ならではの文化や気候、日々の暮らしを、みてくれるみんなと同じように過ごしています。</span>
+        <span class="line reveal">これからもきっと、新しい住人が増えていきます。</span>
+        <span class="line reveal">さああなたも、お皿の前に座ってください。</span>
+        <span class="line reveal">パーティーは、いつでも始められるのですからまっています。</span>
+      </p>
+      <div class="chips reveal">
+        <span class="chip">マグロ</span><span class="chip">サーモン</span>
+        <span class="chip">エビ</span><span class="chip">タマゴ</span>
+        <span class="chip marty">マーティー</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 VIBES -->
+  <section class="section vibes">
+    <div class="inner">
+      <div class="logo reveal">SUPER SUSHI PARTY</div>
+      <div class="punch">
+        <span class="line reveal">わりとハッピーで、</span>
+        <span class="line reveal">かわいくてまぬけで、</span>
+        <span class="line reveal">アゲな毎日！</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 THE TWO -->
+  <section class="section">
+    <div class="inner">
+      <div class="eyebrow reveal">THE TWO</div>
+      <div class="heading reveal">毎日をパーティだと思ってるひとたち。</div>
+      <div class="members">
+        <div class="member reveal"><b>あべゆうか</b><span>@abeyu.ka</span></div>
+        <div class="member reveal"><b>松本伊代</b><span>@iyomtmt</span></div>
+      </div>
+      <p class="copy reveal">似ているような、似ていないような２人。<br>化学反応を楽しみながら、いつでもパーティーを続けていますよ！</p>
+      <div class="links reveal" style="margin-top:2em">二人のもっと深い話 → <a href="#">STORY</a></div>
+    </div>
+  </section>
+
+  <!-- 08 ACTIVITIES -->
+  <section class="section">
+    <div class="inner">
+      <div class="eyebrow reveal">ACTIVITIES</div>
+      <div class="acts">
+        <div class="act reveal">
+          <div class="no">01 — ANIMATION</div>
+          <h3>アニメーション。</h3>
+          <p>月曜も金曜も、雨でも晴れでも、住人たちは今日もどこかで踊っています。SNSで、毎週新作を更新中。</p>
+        </div>
+        <div class="act reveal">
+          <div class="no">02 — EVENTS</div>
+          <h3>リアルでも、パーティー。</h3>
+          <p>展示やイベント出展など、精力的に参加しています。みなさまに会えるのをお待ちしています！</p>
+        </div>
+        <div class="act reveal">
+          <div class="no">03 — GOODS</div>
+          <h3>身に付けて、毎日パーティー。</h3>
+          <p>Tシャツ、ステッカー、ZINE、日常の中で使えるものを少しずつ作っています。<br><a href="#" style="color:var(--salmon)">ECサイトへ →</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 JOIN US -->
+  <section class="section">
+    <div class="inner">
+      <div class="heading reveal" style="font-size:clamp(28px,5vw,54px)">一緒にパーティーしましょう！</div>
+      <p class="copy">
+        <span class="line reveal">スシアニメーション更新中。その他短編作品も鋭意製作中。</span>
+        <span class="line reveal">わたしたちのパーティーが気になったら、フォローしてみてくださいね。</span>
+      </p>
+      <div class="sns reveal">
+        <a href="#">Instagram　@super.sushi.party</a>
+        <a href="#">X (Twitter)　@supepsushiparty</a>
+        <a href="#">TikTok　@supersushiparty</a>
+        <a href="#">Contact →</a>
+      </div>
+      <div class="footnote reveal">お仕事のご依頼 → See our works</div>
+    </div>
+  </section>
+
+</div><!-- /#wrap -->
+
+<div class="scrollcue">SCROLL</div>
+
+<script>
+/* =========================================================================
+   POLA-style scroll engine （移植する時はこの<script>をまるごと持っていける）
+   3要素：① lerp smooth scroll ② scroll連動reveal ③ parallax
+   ========================================================================= */
+(function(){
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = matchMedia('(hover: none)').matches;
+  const useSmooth = !reduce && !isTouch;      // smoothはPC限定（モバイルは native scroll のほうが自然）
+
+  const html   = document.documentElement;
+  const wrap   = document.getElementById('wrap');
+  const bg     = document.getElementById('bg');
+  const layers = [...bg.querySelectorAll('[data-speed]')];
+  const reveals= [...document.querySelectorAll('.reveal')];
+
+  if(!reduce) html.classList.add('anim');     // 初期状態を「隠す」（JSが無い時は素で見える）
+  if(useSmooth) html.classList.add('smooth');
+
+  // --- ① smooth scroll：本文を transform で追従させる ----------------------
+  let target = window.scrollY, current = target;
+  function setBodyHeight(){ if(useSmooth) document.body.style.height = wrap.offsetHeight + 'px'; }
+  window.addEventListener('load', setBodyHeight);
+  window.addEventListener('resize', setBodyHeight);
+  setBodyHeight();
+  window.addEventListener('scroll', ()=>{ target = window.scrollY; }, {passive:true});
+
+  // --- reveal 1要素の進捗を出す（下から昇り→中央で全開→上へ抜けて引く）-------
+  const vh = () => window.innerHeight;
+  function reveal(el){
+    const r = el.getBoundingClientRect();       // transform 適用後の実位置
+    const H = vh();
+    // 入り：下80% → 上55% で 0→1
+    const pIn  = clamp((H*0.80 - r.top) / (H*0.80 - H*0.55), 0, 1);
+    // 抜け：上端が画面上部12%を割ったら軽く戻す（呼吸のexhale）
+    const pOut = clamp((r.bottom - H*0.10) / (H*0.28), 0, 1);
+    const p = Math.min(pIn, pOut);
+    el.style.opacity = p;
+    el.style.transform = `translateY(${(1 - p) * 42}px)`;
+  }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  // --- rAF ループ：smooth・parallax・reveal を毎フレーム同期 -----------------
+  function frame(){
+    if(useSmooth){
+      current += (target - current) * 0.085;                 // ← 数字を下げるほど重く滑る
+      wrap.style.transform = `translate3d(0,${-current}px,0)`;
+    }
+    const scroll = useSmooth ? current : window.scrollY;
+    // ② parallax：速度差で奥行き
+    for(const el of layers){ el.style.transform = `translate3d(0,${scroll * +el.dataset.speed}px,0)`; }
+    // ③ reveal
+    if(!reduce){ for(const el of reveals) reveal(el); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // scroll cue を少し進んだら消す
+  const cue = document.querySelector('.scrollcue');
+  window.addEventListener('scroll', ()=>{ if(cue) cue.style.opacity = window.scrollY > 120 ? 0 : 1; }, {passive:true});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archive | Super Sushi Party（スーパースシパーティー）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css?0722d">
+<link rel="shortcut icon" href="../favicon.ico">
+<meta property="og:title" content="Archive | Super Sushi Party" />
+<meta property="og:description" content="Super Sushi Partyの動画アーカイブページ" />
+<meta property="og:url" content="https://super-sushi-party.com/archive.html" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://super-sushi-party.com/image/ogp_img_sushi.jpg" />
+<meta property="og:site_name" content="Super Sushi Party Official Website" />
+<meta property="og:locale" content="ja_JP" />
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="Super Sushi Partyの動画アーカイブページ" />
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5S5HNEFHS9"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-5S5HNEFHS9');</script>
+
+<style>
+/* ====================================================
+   ARCHIVE PAGE — TOWER × SEASON × SUSHI GAME
+   ==================================================== */
+
+/* --- 季節 背景 --- */
+#seasonBg {
+  position: fixed; inset: 0; z-index: -2;
+  transition: background 2.5s ease;
+}
+#seasonBg.spring { background: linear-gradient(170deg,#ffb7d1 0%,#ffdde9 45%,#fff8fb 100%); }
+#seasonBg.summer { background: linear-gradient(170deg,#0096c7 0%,#48cae4 50%,#ade8f4 100%); }
+#seasonBg.autumn { background: linear-gradient(170deg,#c1121f 0%,#e85d04 40%,#f48c06 70%,#ffd166 100%); }
+#seasonBg.winter { background: linear-gradient(170deg,#03045e 0%,#023e8a 40%,#1d6a9e 75%,#457b9d 100%); }
+
+/* --- パーティクル キャンバス --- */
+#seasonCanvas { position:fixed; inset:0; z-index:-1; pointer-events:none; }
+
+/* --- 季節 切り替えボタン --- */
+#seasonSwitcher {
+  position:fixed; right:14px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:8px; z-index:1001;
+}
+.season-btn {
+  width:42px; height:42px; border:2px solid rgba(255,255,255,.6);
+  background:rgba(255,255,255,.22); border-radius:50%; font-size:19px;
+  cursor:pointer; backdrop-filter:blur(6px); transition:all .3s ease;
+  display:flex; align-items:center; justify-content:center;
+}
+.season-btn:hover,.season-btn.active { background:rgba(255,255,255,.48); border-color:#fff; transform:scale(1.15); }
+.season-btn.active { box-shadow:0 0 0 3px rgba(255,255,255,.7); }
+
+/* --- スコア HUD --- */
+#scoreHud {
+  position:fixed; bottom:0; left:0; right:0; z-index:1002;
+  display:flex; justify-content:center; padding:10px 20px;
+  background:rgba(0,0,0,.45); backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255,255,255,.15); gap:36px; align-items:center;
+  pointer-events:none;
+}
+.hud-block { display:flex; flex-direction:column; align-items:center; color:#fff; }
+.hud-label { font-family:"Bebas Neue",sans-serif; font-size:11px; letter-spacing:2px; opacity:.7; }
+.hud-value { font-family:"Bebas Neue",sans-serif; font-size:28px; line-height:1; color:#ffd166; min-width:60px; text-align:center; }
+#comboDisplay { font-family:"Bebas Neue",sans-serif; font-size:14px; color:#ff6b6b; letter-spacing:2px; min-height:18px; }
+
+/* --- ゲーム レイヤー --- */
+#gameLayer { position:fixed; inset:0; z-index:999; pointer-events:none; overflow:hidden; }
+.sushi-item { position:absolute; pointer-events:auto; cursor:pointer; user-select:none; will-change:top; }
+.sushi-item img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(2px 4px 6px rgba(0,0,0,.3)); pointer-events:none; }
+
+/* スコアポップアップ */
+.score-popup {
+  position:fixed; font-family:"Bebas Neue",sans-serif; font-size:24px;
+  color:#ffd166; text-shadow:0 2px 8px rgba(0,0,0,.4);
+  pointer-events:none; z-index:1005; white-space:nowrap;
+  animation:popupFloat .9s ease forwards;
+}
+.score-popup.rare { font-size:32px; color:#ff6b6b; }
+@keyframes popupFloat {
+  0%   { opacity:1; transform:translate(-50%,0) scale(1.2); }
+  60%  { opacity:1; transform:translate(-50%,-50px) scale(1); }
+  100% { opacity:0; transform:translate(-50%,-80px) scale(.8); }
+}
+
+/* --- ヘッダー上書き --- */
+header { z-index:1003; }
+
+/* --- タワーレイアウト --- */
+.archive-hero { padding:100px 0 40px; text-align:center; }
+.archive-hero .parallax-container { height:auto; margin-bottom:0; }
+.archive-hero .parallax-title { color:#fff; text-shadow:0 4px 20px rgba(0,0,0,.4); }
+
+.archive-filter-wrap { display:flex; justify-content:center; padding:0 20px 40px; }
+.archive-filter { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.filter-btn {
+  padding:8px 22px; border:2px solid rgba(255,255,255,.7);
+  background:rgba(255,255,255,.15); color:#fff;
+  font-family:"Bebas Neue",sans-serif; font-size:15px; letter-spacing:2px;
+  border-radius:30px; cursor:pointer; backdrop-filter:blur(6px); transition:all .3s;
+}
+.filter-btn:hover,.filter-btn.active { background:rgba(255,255,255,.4); border-color:#fff; transform:translateY(-2px); }
+
+.tower-section { padding:0 20px 120px; }
+.tower-wrap { max-width:640px; margin:0 auto; display:flex; flex-direction:column; }
+
+.tower-connector { width:2px; height:28px; background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.1)); margin:0 auto; }
+
+.tower-card { display:flex; align-items:flex-start; gap:10px; }
+.tower-floor {
+  writing-mode:vertical-lr; font-family:"Bebas Neue",sans-serif; font-size:34px;
+  color:rgba(255,255,255,.45); min-width:34px; text-align:center;
+  padding-top:8px; flex-shrink:0; letter-spacing:4px;
+  text-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.tower-card-inner {
+  flex:1; background:rgba(255,255,255,.82); backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px); border-radius:14px; overflow:hidden;
+  cursor:pointer; box-shadow:0 6px 30px rgba(0,0,0,.18);
+  transition:transform .3s,box-shadow .3s;
+  border:1px solid rgba(255,255,255,.6);
+}
+.dark-mode .tower-card-inner { background:rgba(20,20,20,.82); border-color:rgba(255,255,255,.1); }
+.tower-card-inner:hover { transform:translateY(-4px) scale(1.01); box-shadow:0 14px 40px rgba(0,0,0,.25); }
+
+.archive-thumbnail { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#111; }
+.archive-thumbnail img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s,opacity .3s; }
+.tower-card-inner:hover .archive-thumbnail img { transform:scale(1.05); opacity:.75; }
+.archive-play-btn {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(.7);
+  width:56px; height:56px; background:rgba(211,0,90,.9); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .3s,transform .3s;
+}
+.tower-card-inner:hover .archive-play-btn { opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+.archive-text { padding:12px 16px 16px; }
+.archive-tag { display:inline-block; padding:2px 10px; background:#d3005a; color:#fff; font-size:10px; font-family:"Bebas Neue",sans-serif; letter-spacing:1.5px; border-radius:4px; margin-bottom:5px; }
+.tag-collaboration { background:#5a00d3; }
+.tag-event         { background:#d37800; }
+.archive-date  { font-size:12px; color:#d3005a; font-weight:600; margin-bottom:3px; }
+.archive-title { font-size:15px; font-weight:bold; color:#111; line-height:1.5; }
+.dark-mode .archive-title { color:#fff; }
+
+/* --- YouTube モーダル --- */
+.video-modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.video-modal-content {
+  background:rgba(10,10,10,.96); margin:0; padding:0;
+  border-radius:12px; width:90%; max-width:900px;
+  box-shadow:0 10px 60px rgba(0,0,0,.6);
+  animation:slideDown .3s ease; position:relative; overflow:hidden;
+}
+.video-modal-body { padding:0; }
+.video-embed-wrap { position:relative; width:100%; aspect-ratio:16/9; background:#000; }
+.video-embed-wrap iframe { position:absolute; inset:0; width:100%; height:100%; }
+.video-modal-info { padding:18px 22px 22px; }
+.video-modal-title { font-size:20px; font-weight:bold; color:#fff; margin-top:10px; line-height:1.4; }
+.video-modal-content .modal-close { color:#fff; }
+
+/* --- レスポンシブ --- */
+@media(max-width:768px){
+  #seasonSwitcher { right:6px; }
+  .season-btn { width:36px; height:36px; font-size:17px; }
+  .tower-floor { font-size:24px; min-width:26px; }
+  .hud-value { font-size:22px; }
+  .tower-section { padding:0 10px 120px; }
+}
+@media(max-width:480px){
+  #seasonSwitcher { display:none; }
+  .tower-floor { display:none; }
+  .filter-btn { padding:6px 14px; font-size:13px; }
+}
+</style>
+</head>
+
+<body>
+<!-- 季節 背景 -->
+<div id="seasonBg" class="spring"></div>
+<canvas id="seasonCanvas"></canvas>
+
+<!-- 季節 切り替え -->
+<div id="seasonSwitcher">
+  <button class="season-btn active" data-season="spring"  title="春">🌸</button>
+  <button class="season-btn"        data-season="summer"  title="夏">☀️</button>
+  <button class="season-btn"        data-season="autumn"  title="秋">🍁</button>
+  <button class="season-btn"        data-season="winter"  title="冬">❄️</button>
+</div>
+
+<!-- スコア HUD -->
+<div id="scoreHud">
+  <div class="hud-block">
+    <span class="hud-label">🍣 SCORE</span>
+    <span class="hud-value" id="scoreValue">0</span>
+  </div>
+  <div class="hud-block">
+    <span id="comboDisplay"></span>
+  </div>
+  <div class="hud-block">
+    <span class="hud-label">HIGH SCORE</span>
+    <span class="hud-value" id="highScoreValue">0</span>
+  </div>
+</div>
+
+<!-- ゲーム レイヤー -->
+<div id="gameLayer"></div>
+
+<!-- ヘッダー -->
+<header>
+  <a href="./index.html" class="logo"><img src="../image/logo.png" width="90px"></a>
+  <nav><ul>
+    <li><a href="./index.html#WORK">WORK</a></li>
+    <li><a href="./index.html#ABOUT">ABOUT</a></li>
+    <li><a href="./information.html">INFORMATION</a></li>
+    <li><a href="./archive.html" class="active">ARCHIVE</a></li>
+    <li><a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">SHOP</a></li>
+    <li><a href="./index.html#CONTACT">CONTACT</a></li>
+  </ul></nav>
+  <div class="header-right">
+    <label class="dark-mode-toggle"><input type="checkbox" id="darkModeToggle"><span class="dark-mode-slider"></span></label>
+    <button class="mobile-menu-btn" id="mobileMenuOpen">☰</button>
+  </div>
+</header>
+
+<!-- モバイルメニュー -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-header"><button class="close-menu" id="mobileMenuClose">✕</button></div>
+  <ul>
+    <li><a href="./index.html#WORK">WORK</a></li>
+    <li><a href="./index.html#ABOUT">ABOUT</a></li>
+    <li><a href="./information.html">INFORMATION</a></li>
+    <li><a href="./archive.html">ARCHIVE</a></li>
+    <li><a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">SHOP</a></li>
+    <li><a href="./index.html#CONTACT">CONTACT</a></li>
+  </ul>
+  <div class="mobile-menu-footer"><label class="dark-mode-toggle"><input type="checkbox" id="darkModeToggleMobile"><span class="dark-mode-slider"></span></label></div>
+</div>
+
+<!-- ヒーロー -->
+<section class="archive-hero">
+  <div class="parallax-container"><h1 class="parallax-title">ARCHIVE</h1></div>
+</section>
+
+<!-- フィルター -->
+<div class="archive-filter-wrap">
+  <div class="archive-filter">
+    <button class="filter-btn active" data-filter="all">ALL</button>
+    <button class="filter-btn" data-filter="animation">ANIMATION</button>
+    <button class="filter-btn" data-filter="collaboration">COLLABORATION</button>
+    <button class="filter-btn" data-filter="event">EVENT</button>
+  </div>
+</div>
+
+<!-- タワーカードは videos.json から JS で動的生成 -->
+<!-- 新しい動画を追加するときは videos.json の先頭に追記してください -->
+<section class="tower-section">
+  <div class="tower-wrap" id="towerWrap">
+    <p style="color:#fff;text-align:center;padding:40px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">LOADING...</p>
+  </div>
+</section>
+
+<!-- フッター -->
+<footer>
+  <div class="social-links">
+    <a href="https://www.instagram.com/super.sushi.party/" target="_blank" class="social-icon" aria-label="Instagram">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+    </a>
+    <a href="https://x.com/supepsushiparty?s=21" target="_blank" class="social-icon" aria-label="X (Twitter)"><span class="x-text">X</span></a>
+    <a href="https://www.tiktok.com/@supersushiparty?_t=ZS-8vIvC6ZwRQm&_r=1" target="_blank" class="social-icon" aria-label="TikTok">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path></svg>
+    </a>
+  </div>
+  <div class="copyright">© 2026 Copyright SuperSushiParty. All Rights Reserved.</div>
+</footer>
+
+<!-- YouTube モーダル -->
+<div id="videoModal" class="modal video-modal">
+  <div class="modal-content video-modal-content">
+    <span class="modal-close" id="videoModalClose">&times;</span>
+    <div class="video-modal-body">
+      <div class="video-embed-wrap">
+        <iframe id="videoIframe" src="" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="video-modal-info">
+        <span class="archive-tag" id="videoModalTag"></span>
+        <h3 class="video-modal-title" id="videoModalTitle"></h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+/* ====================================================
+   1. 四季パーティクル × スクロール季節切り替え
+   ==================================================== */
+(function() {
+  const canvas = document.getElementById('seasonCanvas');
+  const ctx    = canvas.getContext('2d');
+  const bg     = document.getElementById('seasonBg');
+
+  const SEASONS = {
+    spring: {
+      colors: ['#ffb3c6','#ff85a1','#ffc2d1','#fff0f5','#ffccd5'],
+      count: 50, wind: 0.5, gravity: 0.25,
+      draw(ctx, p) {
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillStyle=p.color; ctx.globalAlpha=p.opacity;
+        ctx.beginPath(); ctx.ellipse(0,0,p.size*.5,p.size,0,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    },
+    summer: {
+      colors: ['#ffffff','#ade8f4','#caf0f8','#e0fbfc'],
+      count: 35, wind: 0.2, gravity: 0.12,
+      draw(ctx, p) {
+        ctx.save(); ctx.translate(p.x,p.y);
+        ctx.globalAlpha=p.opacity*.5; ctx.strokeStyle=p.color; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.arc(0,0,p.size,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+    },
+    autumn: {
+      colors: ['#e63946','#f4a261','#e9c46a','#a8571c','#c77dff'],
+      count: 45, wind: 1.2, gravity: 0.55,
+      draw(ctx, p) {
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillStyle=p.color; ctx.globalAlpha=p.opacity;
+        ctx.beginPath(); ctx.moveTo(0,-p.size); ctx.lineTo(p.size*.6,p.size*.5); ctx.lineTo(-p.size*.6,p.size*.5); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    },
+    winter: {
+      colors: ['#ffffff','#e0fbfc','#caf0f8','#90e0ef'],
+      count: 60, wind: 0.1, gravity: 0.18,
+      draw(ctx, p) {
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.strokeStyle=p.color; ctx.globalAlpha=p.opacity; ctx.lineWidth=1;
+        for(let i=0;i<3;i++){ctx.save();ctx.rotate(i*Math.PI/3);ctx.beginPath();ctx.moveTo(-p.size,0);ctx.lineTo(p.size,0);ctx.stroke();ctx.restore();}
+        ctx.restore();
+      }
+    }
+  };
+
+  let currentSeason = 'spring';
+  let particles = [];
+
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function makeParticle(s) {
+    const d = SEASONS[s];
+    return {
+      x: Math.random()*canvas.width, y: -20-Math.random()*60,
+      vy: d.gravity*(0.6+Math.random()), vx: d.wind*(Math.random()-.3),
+      size: 4+Math.random()*10, rot: Math.random()*Math.PI*2,
+      rotV: (Math.random()-.5)*.06,
+      color: d.colors[Math.floor(Math.random()*d.colors.length)],
+      opacity: 0.5+Math.random()*.5
+    };
+  }
+
+  function initParticles(s) {
+    particles = [];
+    const count = SEASONS[s].count;
+    for(let i=0;i<count;i++){
+      const p = makeParticle(s);
+      p.y = Math.random()*canvas.height;
+      particles.push(p);
+    }
+  }
+  initParticles(currentSeason);
+
+  (function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const d = SEASONS[currentSeason];
+    particles.forEach((p,i)=>{
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV;
+      if(p.y>canvas.height+30||p.x<-40||p.x>canvas.width+40) particles[i]=makeParticle(currentSeason);
+      d.draw(ctx,p);
+    });
+    requestAnimationFrame(animate);
+  })();
+
+  window.setSeason = function(season) {
+    if(!SEASONS[season]||season===currentSeason) return;
+    currentSeason = season;
+    bg.className  = season;
+    initParticles(season);
+    document.querySelectorAll('.season-btn').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.season===season);
+    });
+  };
+
+  document.querySelectorAll('.season-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>window.setSeason(btn.dataset.season));
+  });
+
+  // スクロールで季節を切り替え（4分割）
+  const ORDER = ['spring','summer','autumn','winter'];
+  window.addEventListener('scroll', ()=>{
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    if(maxScroll<=0) return;
+    const pct = window.scrollY / maxScroll;
+    const idx  = Math.min(3, Math.floor(pct * 4));
+    window.setSeason(ORDER[idx]);
+  }, { passive: true });
+
+})();
+
+
+/* ====================================================
+   2. 寿司ゲーム
+   ==================================================== */
+(function(){
+  const TYPES = [
+    {img:'../sozai/toro.png',    name:'大トロ',   pts:50, rare:.04, msg:'🎉 大トロゲット！最高！'},
+    {img:'../sozai/maguro.png',  name:'マグロ',   pts:30, rare:.07, msg:'✨ マグロ！うまい！'},
+    {img:'../sozai/salmon.png',  name:'サーモン', pts:20, rare:.09, msg:'🐟 サーモン！'},
+    {img:'../sozai/ikura.png',   name:'イクラ',   pts:15, rare:.10, msg:'🫧 プチプチ！'},
+    {img:'../sozai/ebi.png',     name:'エビ',     pts:12, rare:.11, msg:'🦐 エビ！'},
+    {img:'../sozai/anago.png',   name:'アナゴ',   pts:10, rare:.12, msg:'🍣 アナゴ！'},
+    {img:'../sozai/aji.png',     name:'アジ',     pts: 8, rare:.13, msg:'👏 アジ！'},
+    {img:'../sozai/tamago.png',  name:'タマゴ',   pts: 5, rare:.13, msg:'💛 タマゴ！'},
+    {img:'../sozai/norimaki.png',name:'ノリマキ', pts: 5, rare:.11, msg:'🌊 ノリマキ！'},
+    {img:'../sozai/duke.png',    name:'デューク', pts: 3, rare:.10, msg:'🍥 デューク！'},
+  ];
+
+  const layer  = document.getElementById('gameLayer');
+  let score    = 0;
+  let high     = parseInt(localStorage.getItem('ssp-archive-highscore')||'0',10);
+  let combo    = 0, comboTimer = null;
+  let active   = [];
+  let lastTs   = null;
+
+  document.getElementById('highScoreValue').textContent = high;
+
+  function updateScore(pts){
+    combo++;
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(()=>{ combo=0; renderCombo(); }, 2000);
+    const mul = combo>=3 ? combo-2 : 1;
+    score += pts*mul;
+    if(score>high){ high=score; localStorage.setItem('ssp-archive-highscore',high); document.getElementById('highScoreValue').textContent=high; }
+    document.getElementById('scoreValue').textContent = score;
+    renderCombo();
+  }
+  function renderCombo(){
+    document.getElementById('comboDisplay').textContent = combo>=3 ? `🔥 ${combo} COMBO!` : '';
+  }
+
+  function popup(x,y,pts,name,rare){
+    const el=document.createElement('div');
+    el.className=rare?'score-popup rare':'score-popup';
+    el.textContent=`+${pts} ${name}`;
+    el.style.left=x+'px'; el.style.top=y+'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 950);
+  }
+
+  function pick(){
+    const r=Math.random(); let cum=0;
+    for(const t of TYPES){ cum+=t.rare; if(r<=cum) return t; }
+    return TYPES[TYPES.length-1];
+  }
+
+  function spawn(){
+    const t    = pick();
+    const size = 50+Math.random()*30;
+    const xPct = 5+Math.random()*85;
+    const spd  = 90+Math.random()*90;
+    const rotD = (Math.random()-.5)*40;
+
+    const el = document.createElement('div');
+    el.className='sushi-item';
+    el.style.cssText=`left:${xPct}%;top:-80px;width:${size}px;height:${size}px;transform:rotate(${rotD}deg);`;
+    const img=document.createElement('img'); img.src=t.img; img.alt=t.name;
+    el.appendChild(img);
+
+    let yPos=-80, caught=false;
+
+    function onCatch(e){
+      e.stopPropagation();
+      if(caught) return; caught=true;
+      const r=el.getBoundingClientRect();
+      popup(r.left+r.width/2, r.top, t.pts, t.name, t.pts>=30);
+      el.style.transition='transform .3s,opacity .3s';
+      el.style.transform=`rotate(${rotD+360}deg) scale(1.5)`;
+      el.style.opacity='0';
+      setTimeout(()=>el.remove(),310);
+      updateScore(t.pts);
+      active=active.filter(s=>s.el!==el);
+      if(t.pts>=30){
+        const m=document.createElement('div');
+        m.style.cssText=`position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);font-family:"Bebas Neue",sans-serif;font-size:36px;color:#ffd166;text-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;z-index:1010;animation:popupFloat 1.5s ease forwards;white-space:nowrap;`;
+        m.textContent=t.msg; document.body.appendChild(m);
+        setTimeout(()=>m.remove(),1500);
+      }
+    }
+    el.addEventListener('click', onCatch);
+    el.addEventListener('touchstart', e=>{ e.preventDefault(); onCatch(e); },{passive:false});
+    layer.appendChild(el);
+    active.push({el, yPos, spd, caught:()=>caught});
+  }
+
+  (function loop(ts){
+    if(!lastTs) lastTs=ts;
+    const dt=Math.min(ts-lastTs,100); lastTs=ts;
+    active=active.filter(s=>{
+      if(s.caught()) return false;
+      s.yPos+=s.spd*dt/1000;
+      s.el.style.top=s.yPos+'px';
+      if(s.yPos>window.innerHeight+60){ s.el.remove(); return false; }
+      return true;
+    });
+    requestAnimationFrame(loop);
+  })();
+
+  setInterval(spawn, 2000);
+  setTimeout(spawn, 800);
+})();
+
+
+/* ====================================================
+   3. タワー描画 ＋ フィルター
+   ====================================================
+   動画を追加・編集するときは videos.json を編集してください。
+   先頭が最新（上に表示）になります。
+   カテゴリ: "animation" / "collaboration" / "event"
+   ==================================================== */
+(function(){
+  const wrap = document.getElementById('towerWrap');
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderTower(videos, filter) {
+    const list = filter === 'all' ? videos : videos.filter(v => v.category === filter);
+    wrap.innerHTML = '';
+
+    if (list.length === 0) {
+      wrap.innerHTML = '<p style="color:#fff;text-align:center;padding:40px;font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;">NO VIDEOS</p>';
+      return;
+    }
+
+    list.forEach((v, i) => {
+      const floor   = String(i + 1).padStart(2, '0');
+      const tagClass = v.category === 'collaboration' ? 'tag-collaboration'
+                     : v.category === 'event'         ? 'tag-event'
+                     : '';
+      const tagText  = v.category === 'collaboration' ? 'COLLABORATION'
+                     : v.category === 'event'         ? 'EVENT'
+                     : 'ANIMATION';
+
+      if (i > 0) {
+        wrap.insertAdjacentHTML('beforeend', '<div class="tower-connector"></div>');
+      }
+
+      wrap.insertAdjacentHTML('beforeend', `
+        <div class="tower-card" data-category="${escHtml(v.category)}" data-video-id="${escHtml(v.id)}">
+          <span class="tower-floor">${floor}</span>
+          <div class="tower-card-inner">
+            <div class="archive-thumbnail">
+              <img src="https://img.youtube.com/vi/${escHtml(v.id)}/maxresdefault.jpg"
+                   alt="${escHtml(v.title)}"
+                   onerror="this.onerror=null;this.src='https://img.youtube.com/vi/${escHtml(v.id)}/hqdefault.jpg'">
+              <div class="archive-play-btn">
+                <svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+            <div class="archive-text">
+              <span class="archive-tag ${tagClass}">${tagText}</span>
+              <h3 class="archive-title">${escHtml(v.title)}</h3>
+            </div>
+          </div>
+        </div>
+      `);
+    });
+  }
+
+  let allVideos = [];
+  let currentFilter = 'all';
+
+  fetch('./videos.json')
+    .then(r => r.json())
+    .then(data => {
+      allVideos = data;
+      renderTower(allVideos, currentFilter);
+    })
+    .catch(() => {
+      wrap.innerHTML = '<p style="color:#fff;text-align:center;padding:40px;font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;">LOAD ERROR</p>';
+    });
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      renderTower(allVideos, currentFilter);
+    });
+  });
+})();
+
+
+/* ====================================================
+   4. YouTube モーダル（イベント委任）
+   ==================================================== */
+(function(){
+  const modal  = document.getElementById('videoModal');
+  const iframe = document.getElementById('videoIframe');
+  const close  = document.getElementById('videoModalClose');
+  const wrap   = document.getElementById('towerWrap');
+
+  wrap.addEventListener('click', e => {
+    const cardInner = e.target.closest('.tower-card-inner');
+    if (!cardInner) return;
+    const card  = cardInner.closest('.tower-card');
+    const id    = card.dataset.videoId;
+    const title = card.querySelector('.archive-title').textContent;
+    const tagEl = card.querySelector('.archive-tag');
+
+    iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+    document.getElementById('videoModalTitle').textContent = title;
+    const mt = document.getElementById('videoModalTag');
+    mt.textContent = tagEl.textContent;
+    mt.className   = tagEl.className;
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+
+  function closeModal() {
+    modal.classList.remove('active');
+    iframe.src = '';
+    document.body.style.overflow = '';
+  }
+  close.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+})();
+</script>
+</body>
+</html>

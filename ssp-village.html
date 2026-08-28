@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  SUPER SUSHI PARTY  —  すしむら (SSP Village) : v1 プロトタイプ
+  「バルビレッジ」的な、まったり歩き回れる癒しの村。
+  中心メカニクス: 住人に近づいて「寿司で乾杯」→ テンションUP。
+
+  ▼ キャラ画像の差し替え方（本物のマーティーたちにする）
+    下の CONFIG.sprites に画像パスを入れるだけ。null のままだと仮絵で動きます。
+      marty:     'assets/marty.png'    のように書く
+    ※ 画像は「上向きに立った1枚絵（背景透明PNG）」推奨。
+      左右反転は進行方向に合わせて自動でやります。
+  ============================================================
+-->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>すしむら｜SUPER SUSHI PARTY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=M+PLUS+Rounded+1c:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ─ SSP パレット ─ */
+    --sky:        #FBF6EA;  /* 空気・背景クリーム */
+    --grass:      #CFE3C4;  /* 抹茶クリームの草地 */
+    --grass-deep: #BBD6AE;
+    --path:       #EADFC6;  /* 小道 */
+    --water:      #A9D6D0;  /* 池 */
+    --salmon:     #F4A6A0;  /* 寿司の差し色（サーモン）*/
+    --tamago:     #F5D06B;  /* 玉子 */
+    --nori:       #3B4A3A;  /* 海苔（濃い緑）*/
+    --ink:        #4A3F3A;  /* 線・文字 */
+    --blush:      #F6C6C0;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; overflow:hidden; background:var(--sky);
+    font-family:"Zen Maru Gothic","M PLUS Rounded 1c",sans-serif; color:var(--ink); }
+  #stage{ position:fixed; inset:0; touch-action:none; }
+  button{ touch-action:manipulation; }   /* スマホのダブルタップズーム防止 */
+  #doorBtn{ position:fixed; top:120px; left:50%; transform:translateX(-50%); z-index:12; display:none;
+    border:none; cursor:pointer; font-family:inherit; font-weight:900; font-size:15px; color:#fff;
+    background:#B5895A; padding:11px 22px; border-radius:24px; box-shadow:0 8px 20px rgba(74,63,58,.35); }
+  #doorBtn:active{ transform:translateX(-50%) scale(.95); }
+  #fishBtn{ position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:12; display:none;
+    border:none; cursor:pointer; font-family:inherit; font-weight:900; font-size:16px; color:#fff;
+    background:var(--water); padding:12px 26px; border-radius:26px; box-shadow:0 8px 20px rgba(74,63,58,.3); }
+  #fishBtn:active{ transform:translateX(-50%) scale(.95); }
+  #fishBtn.bite{ background:var(--salmon); animation:pulse 0.5s ease-in-out infinite; }
+  body.inside #fishBtn{ display:none !important; }
+  #spectate{ position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:14;
+    background:rgba(74,63,58,.85); color:#fff; font-family:inherit; font-weight:900; font-size:13px;
+    padding:8px 16px; border-radius:18px; box-shadow:0 6px 16px rgba(0,0,0,.2); }
+  #spectate[hidden]{ display:none; }
+  #roomDecoBtn{ display:none; position:fixed; top:120px; right:16px; z-index:12; border:none; cursor:pointer;
+    font-family:inherit; font-weight:900; font-size:15px; color:#fff; background:var(--salmon);
+    padding:11px 20px; border-radius:22px; box-shadow:0 8px 20px rgba(244,166,160,.5); }
+  body.inside #roomDecoBtn{ display:block; }
+  #photoBtn{ display:none; position:fixed; top:120px; left:16px; z-index:12; border:none; cursor:pointer;
+    font-family:inherit; font-weight:900; font-size:15px; color:#fff; background:#7FB0C9;
+    padding:11px 18px; border-radius:22px; box-shadow:0 8px 20px rgba(74,63,58,.3); }
+  body.inside #photoBtn{ display:block; }
+  #photoBtn:active{ transform:scale(.95); }
+  #photoModal{ position:fixed; inset:0; z-index:40; display:grid; place-items:center;
+    background:rgba(74,63,58,.55); backdrop-filter:blur(3px); padding:20px; }
+  #photoModal[hidden]{ display:none; }
+  .photo-card{ background:#fff; border-radius:20px; padding:14px; max-width:min(92vw,460px);
+    box-shadow:0 20px 50px rgba(0,0,0,.3); }
+  .photo-card img{ display:block; width:100%; border-radius:12px; background:#eee; }
+  .photo-actions{ display:flex; gap:8px; margin-top:12px; }
+  .photo-actions button{ flex:1; border:none; cursor:pointer; font-family:inherit; font-weight:900;
+    font-size:15px; padding:12px; border-radius:14px; color:#fff; }
+  .pa-share{ background:var(--salmon); } .pa-save{ background:var(--water); } .pa-close{ background:#c9b8b2; }
+  #roomDecoBtn.active{ background:#B5895A; }
+  #roomDecoBtn:active{ transform:scale(.95); }
+  #roomTray{ position:fixed; left:16px; right:16px; bottom:26px; z-index:11; pointer-events:none; }
+  #roomTray[hidden]{ display:none; }
+  .chip.locked{ opacity:.5; }
+  @media (max-width:859px){ #roomTray{ left:168px; } }
+  body.inside #hud, body.inside #cheer, body.inside #invite, body.inside #tray,
+  body.inside #chatBar, body.inside #logPanel, body.inside #chatToggle, body.inside #diag{ display:none !important; }
+  canvas{ display:block; width:100%; height:100%; }
+
+  /* ─ HUD: テンションメーター ─ */
+  #hud{ position:fixed; top:14px; left:14px; right:14px; display:flex; flex-wrap:wrap;
+    align-items:center; gap:10px; pointer-events:none; z-index:5; }
+  .gauge-wrap{ background:rgba(255,255,255,.72); border:2px solid #fff;
+    border-radius:20px; padding:7px 12px 7px 10px; box-shadow:0 6px 18px rgba(74,63,58,.15);
+    display:flex; align-items:center; gap:9px; backdrop-filter:blur(4px); }
+  .gauge-label{ font-weight:900; font-size:13px; letter-spacing:.04em; white-space:nowrap; }
+  .gauge-track{ width:min(46vw,220px); height:12px; background:#eadfce; border-radius:8px; overflow:hidden; }
+  .gauge-fill{ height:100%; width:0%; border-radius:8px;
+    background:linear-gradient(90deg,var(--tamago),var(--salmon)); transition:width .35s cubic-bezier(.4,1.3,.5,1); }
+  .gauge-num{ font-weight:900; font-size:13px; min-width:34px; text-align:right; }
+
+  /* ─ 操作説明（最初だけ）─ */
+  #intro{ position:fixed; inset:0; z-index:20; display:grid; place-items:center;
+    background:rgba(251,246,234,.86); backdrop-filter:blur(2px); transition:opacity .6s; }
+  #intro .card{ text-align:center; padding:26px 30px; }
+  #intro h1{ font-size:clamp(26px,7vw,44px); margin:0 0 6px; font-weight:900; letter-spacing:.02em; }
+  #intro h1 span{ color:var(--salmon); }
+  #intro p{ margin:4px 0; font-size:15px; font-weight:700; opacity:.8; }
+  #intro .go{ margin-top:18px; border:none; cursor:pointer; font-family:inherit;
+    font-weight:900; font-size:16px; color:#fff; background:var(--salmon);
+    padding:13px 30px; border-radius:30px; box-shadow:0 8px 20px rgba(244,166,160,.5); }
+  #intro .go:active{ transform:translateY(2px); }
+  .keys{ font-size:13px; opacity:.65; margin-top:14px; }
+  #intro .ver{ margin-top:10px; font-size:12px; font-weight:700; letter-spacing:.06em; color:var(--salmon); opacity:.8; }
+
+  /* ─ スマホ操作: 左パッド ─ */
+  #pad{ position:fixed; left:22px; bottom:26px; width:130px; height:130px; z-index:8;
+    border-radius:50%; background:rgba(255,255,255,.5); border:2px solid rgba(255,255,255,.8);
+    touch-action:none; box-shadow:0 6px 16px rgba(74,63,58,.12); }
+  #knob{ position:absolute; left:50%; top:50%; width:56px; height:56px; margin:-28px 0 0 -28px;
+    border-radius:50%; background:#fff; box-shadow:0 4px 10px rgba(74,63,58,.2);
+    display:grid; place-items:center; font-size:22px; }
+  /* ─ スマホ操作: 右 乾杯ボタン ─ */
+  #cheer{ position:fixed; right:22px; bottom:40px; z-index:8; width:104px; height:104px;
+    border:none; border-radius:50%; cursor:pointer; font-family:inherit; color:#fff; font-weight:900;
+    font-size:19px; line-height:1.15; background:var(--salmon);
+    box-shadow:0 10px 22px rgba(244,166,160,.55); transition:transform .08s; }
+  #cheer:active{ transform:scale(.92); }
+  #cheer.ready{ animation:pulse 1.1s ease-in-out infinite; }
+  #invite{ position:fixed; right:32px; bottom:160px; z-index:8; width:82px; height:82px;
+    border:none; border-radius:50%; cursor:pointer; font-family:inherit; color:#fff; font-weight:900;
+    font-size:14px; line-height:1.1; background:var(--tamago); display:none;
+    box-shadow:0 8px 18px rgba(245,208,107,.6); transition:transform .08s; }
+  #invite .emoji{ font-size:22px; display:block; }
+  #invite:active{ transform:scale(.92); }
+  @media (min-width:860px){ #invite{ display:none !important; } }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 10px 22px rgba(244,166,160,.55);}
+    50%{ box-shadow:0 10px 30px rgba(244,166,160,.9);} }
+  .emoji{ font-size:26px; display:block; }
+
+  /* ─ あつめた数ピル & ネタ図鑑 ─ */
+  .count-pill{ pointer-events:auto; cursor:pointer; font-family:inherit;
+    border:2px solid #fff; background:rgba(255,255,255,.72); border-radius:20px;
+    padding:8px 15px; font-weight:900; font-size:14px; color:var(--ink);
+    box-shadow:0 6px 18px rgba(74,63,58,.15); backdrop-filter:blur(4px); }
+  .count-pill:active{ transform:translateY(1px); }
+  #decoBtn.active{ background:var(--salmon); color:#fff; border-color:var(--salmon); }
+
+  /* ─ 飾りつけトレイ（下部・dpadをよけて右寄り）─ */
+  #tray{ position:fixed; left:16px; right:16px; bottom:26px; z-index:7; pointer-events:none; }
+  #tray[hidden]{ display:none; }
+  .tray-inner{ pointer-events:auto; display:flex; gap:8px; overflow-x:auto; padding:9px;
+    background:rgba(255,255,255,.82); border:2px solid #fff; border-radius:18px;
+    box-shadow:0 8px 22px rgba(74,63,58,.18); backdrop-filter:blur(4px);
+    -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .tray-inner::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    width:52px; height:52px; border:2px solid transparent; border-radius:14px; background:#fff;
+    cursor:pointer; font-family:inherit; color:var(--ink); box-shadow:0 3px 8px rgba(74,63,58,.1); }
+  .chip .cemoji{ font-size:21px; line-height:1; }
+  .chip small{ font-size:10px; font-weight:900; margin-top:2px; opacity:.8; }
+  .chip.sel{ border-color:var(--salmon); background:#fff5f3; transform:translateY(-3px); }
+  .chip-empty{ align-self:center; font-size:12px; font-weight:700; opacity:.6; padding:0 10px; white-space:nowrap; }
+  @media (max-width:859px){ #tray{ left:168px; } }  /* スマホは左パッドをよける */
+
+  #diag{ position:fixed; left:12px; right:12px; bottom:12px; z-index:30; cursor:pointer;
+    background:rgba(74,63,58,.92); color:#fff; font-family:inherit; font-weight:700;
+    font-size:12px; line-height:1.5; padding:12px 14px; border-radius:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25); }
+  #diag[hidden]{ display:none; }
+  #diag b{ color:var(--tamago); }
+
+  /* ─ なまえ入力（イントロ）─ */
+  .nameField{ display:inline-flex; align-items:center; gap:8px; font-weight:900; font-size:14px; margin-top:14px; }
+  .nameField input{ border:2px solid var(--salmon); border-radius:14px; padding:8px 12px; font-family:inherit;
+    font-size:15px; width:130px; text-align:center; color:var(--ink); outline:none; }
+
+  /* ─ チャット入力バー ─ */
+  #chatBar{ position:fixed; left:50%; transform:translateX(-50%); bottom:26px; z-index:9;
+    display:flex; gap:8px; width:min(92vw,460px); }
+  #chatBar[hidden]{ display:none; }
+  #chatBar input{ flex:1; border:2px solid #fff; border-radius:22px; padding:12px 16px; font-family:inherit;
+    font-size:16px; color:var(--ink); background:rgba(255,255,255,.96); outline:none;
+    box-shadow:0 8px 20px rgba(74,63,58,.15); }
+  #chatBar button{ border:none; border-radius:22px; padding:0 20px; font-family:inherit; font-weight:900;
+    color:#fff; background:var(--salmon); cursor:pointer; box-shadow:0 8px 20px rgba(244,166,160,.5); }
+  @media (max-width:859px){ #chatBar{ bottom:172px; width:min(94vw,460px); } } /* 操作パッドの上に */
+
+  /* ─ コメントログ（右端・折りたたみ）─ */
+  #logPanel{ position:fixed; top:64px; right:0; z-index:9; display:flex; align-items:flex-start; }
+  .log-tab{ border:none; cursor:pointer; background:var(--salmon); color:#fff; font-weight:900; font-size:13px;
+    padding:12px 7px; border-radius:12px 0 0 12px; box-shadow:0 6px 16px rgba(74,63,58,.2);
+    writing-mode:vertical-rl; letter-spacing:.1em; }
+  .log-body{ width:240px; max-height:min(58vh,420px); background:rgba(255,255,255,.94); border:2px solid #fff;
+    border-right:none; border-radius:14px 0 0 14px; box-shadow:0 10px 28px rgba(74,63,58,.2);
+    backdrop-filter:blur(4px); display:flex; flex-direction:column; overflow:hidden; }
+  #logPanel.collapsed .log-body{ display:none; }
+  #logPanel:not(.collapsed) .log-tab{ border-radius:12px 0 0 12px; }
+  .log-head{ display:flex; justify-content:space-between; align-items:center; padding:9px 12px;
+    font-weight:900; font-size:13px; border-bottom:1px solid rgba(74,63,58,.08); }
+  .log-head button{ border:none; background:none; cursor:pointer; font-weight:900; font-size:14px; color:var(--ink); }
+  .log-list{ overflow-y:auto; padding:9px 12px; display:flex; flex-direction:column; gap:8px; }
+  .log-item{ font-size:12.5px; line-height:1.4; word-break:break-word; }
+  .log-item b{ color:var(--salmon); font-weight:900; margin-right:5px; }
+  .log-item em{ color:#b3aaa4; font-style:normal; font-size:10px; margin-left:5px; }
+  @media (max-width:859px){ .log-body{ width:min(64vw,240px); } }
+  #zukan{ position:fixed; inset:0; z-index:15; display:grid; place-items:center;
+    background:rgba(74,63,58,.3); backdrop-filter:blur(3px); padding:20px; }
+  #zukan[hidden]{ display:none; }
+  .zcard{ position:relative; background:var(--sky); border-radius:24px; padding:22px;
+    width:min(440px,92vw); max-height:82vh; overflow:auto; box-shadow:0 20px 50px rgba(74,63,58,.3); }
+  .zcard h2{ margin:0 0 14px; font-weight:900; font-size:22px; }
+  .zcard h2 small{ font-size:14px; color:var(--salmon); font-weight:700; }
+  .zclose{ position:absolute; top:14px; right:14px; border:none; cursor:pointer;
+    width:34px; height:34px; border-radius:50%; background:#fff; font-weight:900; font-size:15px;
+    color:var(--ink); box-shadow:0 4px 10px rgba(74,63,58,.15); }
+  .zgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .zcell{ background:#fff; border-radius:16px; padding:12px 6px; text-align:center;
+    box-shadow:0 4px 12px rgba(74,63,58,.08); }
+  .zcell.locked{ background:#efe8da; opacity:.7; }
+  .zemoji{ font-size:30px; line-height:1.1; }
+  .zname{ font-weight:900; font-size:13px; margin-top:4px; }
+  .zcount{ font-size:11px; color:var(--salmon); font-weight:700; margin-top:2px; }
+  .zcell.locked .zcount{ color:#a99; }
+  .zhint{ font-size:12px; opacity:.7; font-weight:700; margin:16px 2px 2px; text-align:center; }
+
+  @media (min-width:860px){ #pad{ display:none; } #cheer{ display:none; } }
+  @media (prefers-reduced-motion:reduce){ #cheer.ready{ animation:none; } }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="game"></canvas></div>
+
+<div id="hud">
+  <div class="gauge-wrap">
+    <span class="gauge-label">🍣 テンション</span>
+    <div class="gauge-track"><div class="gauge-fill" id="fill"></div></div>
+    <span class="gauge-num" id="num">0%</span>
+  </div>
+  <button class="count-pill" id="pill">🍣 <span id="pcount">0</span></button>
+  <button class="count-pill" id="decoBtn">✏️ かざる</button>
+  <button class="count-pill" id="chatToggle">💬</button>
+  <button class="count-pill" id="bgmBtn">🔊</button>
+</div>
+<audio id="bgm" src="bgm_ssp_village.mp3" loop preload="auto"></audio>
+<div id="spectate" hidden>👀 観戦中（満室）</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- 折りたたみコメントログ（画面の端）-->
+<div id="logPanel" class="collapsed">
+  <button id="logTab" class="log-tab">💬 ログ</button>
+  <div class="log-body">
+    <div class="log-head">みんなのコメント <button id="logClose">✕</button></div>
+    <div id="logList" class="log-list"></div>
+  </div>
+</div>
+
+<!-- チャット入力 -->
+<div id="chatBar" hidden>
+  <input id="chatInput" maxlength="60" placeholder="コメントを入力してEnter…">
+  <button id="chatSend">送信</button>
+</div>
+
+<!-- 飾りつけトレイ -->
+<div id="tray" hidden><div class="tray-inner" id="trayInner"></div></div>
+
+<!-- 画像読み込み診断（失敗時のみ表示） -->
+<div id="diag" hidden></div>
+
+<!-- ネタ図鑑 -->
+<div id="zukan" hidden><div class="zcard">
+  <button id="zclose" class="zclose">✕</button>
+  <h2>かざり図鑑 <small><span id="zfound">0</span>/<span id="ztotal">9</span></small></h2>
+  <div id="zgrid" class="zgrid"></div>
+  <p class="zhint">🍣 テンションを上げると、レアなネタや大きな飾りが拾えるようになるよ。</p>
+</div></div>
+
+<!-- スマホ操作 -->
+<div id="pad"><div id="knob">✦</div></div>
+<button id="cheer"><span class="emoji">🍣</span>かんぱい</button>
+<button id="invite"><span class="emoji">🏠</span>まねく</button>
+<button id="doorBtn">🚪 入る</button>
+<button id="fishBtn">🎣 つる</button>
+<button id="roomDecoBtn">🪑 かぐ</button>
+<button id="photoBtn">📸 さつえい</button>
+<div id="roomTray" hidden><div class="tray-inner" id="roomTrayInner"></div></div>
+<div id="photoModal" hidden><div class="photo-card">
+  <img id="photoImg" alt="おうちスクショ">
+  <div class="photo-actions">
+    <button id="photoShare" class="pa-share">共有</button>
+    <button id="photoSave" class="pa-save">保存</button>
+    <button id="photoClose" class="pa-close">とじる</button>
+  </div>
+</div></div>
+
+<!-- はじめの案内 -->
+<div id="intro"><div class="card">
+  <h1>すし<span>むら</span></h1>
+  <p>ゆるく歩いて、住人に「寿司で乾杯」。</p>
+  <p>落ちてるネタは歩くだけで拾える。テンションが高いほどレアが拾えるよ。</p>
+  <p>拾ったら「✏️かざる」で村に飾ろう。</p>
+  <p>🏠 左のほうに「じぶんのおうち」。庭を飾ると居心地が上がるよ。</p>
+  <p>拾うと🍚こめが貯まる。「🏞️ひろげる」で土地を広げよう。</p>
+  <button class="go" id="start">さんぽを始める</button>
+  <div class="nameField">なまえ <input id="nameInput" maxlength="12"></div>
+  <div class="keys">PC: 矢印/WASDで移動　スペースで乾杯　Eでまねく</div>
+  <div class="ver">ver. 0.16　テスト版</div>
+</div></div>
+
+<script>
+"use strict";
+// ==========================================================
+//  設定（ここをいじれば調整できます）
+// ==========================================================
+const CONFIG = {
+  world:   { w: 1600, h: 1200 },     // 村の広さ
+  player:  { speed: 165, radius: 20 },
+  cheerRange: 78,                    // 乾杯できる距離
+  pickupRange: 34,                   // アイテムを拾える距離
+  maxItems: 14,                      // 村に置いておくアイテムの数
+  // ▼ マルチプレイ設定
+  serverUrl: null,                   // 例: 'wss://あなたのサーバー'。null ならローカル動作
+  supabaseUrl: 'https://cswirivvkkzkqozflqya.supabase.co',
+  supabaseKey: 'sb_publishable_T8sDouFQvgWMUVxNNNP7nw_TaWVAIyd',
+  bubbleMs: 6000,                    // 吹き出しの表示時間(ms)
+  moveHz: 8,                         // 位置を送る頻度(回/秒)
+  localChatDemo: true,               // ローカル時、デモのbot住人を出す
+  // ▼ キャラ画像（正面/右向き/後ろ）。左向きは右向きの左右反転で自動生成します。
+  //   about.html と同じ画像パスを指定（同一ドメインならそのまま表示されます）。
+  //   読み込めない環境では自動で仮絵にフォールバックします。
+  sprites: {
+    // マーティー: 3方向あり。素材の「右向き」は絵としては左向きなので faces:'left'
+    marty:  { front:'https://super-sushi-party.com/image/about/about_m_01.png',
+              right:'https://super-sushi-party.com/image/about/about_m_02.png',
+              back: 'https://super-sushi-party.com/image/about/about_m_03.png', faces:'left' },
+    // 住人: 1枚だけ（右向きの絵）。all を全方向に使い、左移動で自動反転
+    // その他キャラ（正面/右/後ろ。素材の右向きは左向き想定→faces:'left'）
+    chara1: { front:'https://super-sushi-party.com/image/about/about_40.png', right:'https://super-sushi-party.com/image/about/about_37.png', back:'https://super-sushi-party.com/image/about/about_38.png', faces:'right' },
+    chara2: { front:'https://super-sushi-party.com/image/about/about_34.png', right:'https://super-sushi-party.com/image/about/about_35.png', back:'https://super-sushi-party.com/image/about/about_36.png', faces:'right' },
+    chara3: { front:'https://super-sushi-party.com/image/about/about_29.png', right:'https://super-sushi-party.com/image/about/about_31.png', back:'https://super-sushi-party.com/image/about/about_32.png', faces:'right' },
+    // 1枚もの（右向き）の住人
+    chara4: { all:'https://super-sushi-party.com/image/about/about_13.png', faces:'right' },
+    chara5: { all:'https://super-sushi-party.com/image/about/about_14.png', faces:'right' },
+    chara6: { all:'https://super-sushi-party.com/image/about/about_15.png', faces:'right' },
+  },
+};
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+// ==========================================================
+//  画像ローダー（任意）
+// ==========================================================
+const IMAGES = {};
+let imgOk=0, imgFail=0; const imgFailList=[];
+function trackImg(im, src){
+  im.onload  = ()=>{ imgOk++; refreshDiag(); };
+  im.onerror = ()=>{ imgFail++; if(imgFailList.length<5) imgFailList.push(src.split('/').pop()); refreshDiag(); };
+}
+function refreshDiag(){
+  const el=document.getElementById('diag'); if(!el) return;
+  if(imgFail>0){
+    el.hidden=false;
+    el.innerHTML = '⚠️ キャラ/アイテム画像を <b>'+imgFail+'件</b> 読み込めませんでした（'+
+      imgFailList.join(', ')+(imgFail>imgFailList.length?' …':'')+'）<br>'+
+      'URLが正しければ、別ドメインの読み込み制限が原因です。実サイト（同一ドメイン）に置くと表示されます。<br>'+
+      '<small>タップで閉じる</small>';
+    el.onclick=()=>{ el.hidden=true; };
+  } else { el.hidden=true; }
+}
+for (const key in CONFIG.sprites){
+  const set = CONFIG.sprites[key]; if(!set) continue;
+  const out = { faces: set.faces || 'left' };
+  ['front','right','back','all'].forEach(dir=>{
+    if(set[dir]){ const im=new Image(); trackImg(im,set[dir]); im.src=set[dir]; out[dir]=im; }
+  });
+  IMAGES[key] = out;
+}
+
+// ==========================================================
+//  Canvas セットアップ（高解像度対応）
+// ==========================================================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let VW = 0, VH = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  VW = window.innerWidth; VH = window.innerHeight;
+  canvas.width = VW * DPR; canvas.height = VH * DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize); resize();
+
+// ==========================================================
+//  村のレイアウト（固定配置のかわいい小物たち）
+// ==========================================================
+const W = CONFIG.world.w, H = CONFIG.world.h;
+const rand = (a,b)=>a+Math.random()*(b-a);
+
+// 池
+const pond = { x: 1180, y: 340, rx: 190, ry: 130 };
+
+// ─ あなたの区画（マイホーム）：ロット単位で拡張できる ─
+const LOTW=240, LOTH=220, LOTOX=120, LOTOY=300, LOTCOLS=5, LOTROWS=4;
+const START=[0,2];                 // 最初から持っている区画
+const owned = new Set();           // 所有ロット "c,r"
+let rice = 0;                      // 拡張につかう「こめ」（拾うと貯まる）
+const cellKey=(c,r)=>c+','+r;
+const cellRect=(c,r)=>({ x0:LOTOX+c*LOTW, y0:LOTOY+r*LOTH, x1:LOTOX+(c+1)*LOTW, y1:LOTOY+(r+1)*LOTH });
+const cellAt=(x,y)=>({ c:Math.floor((x-LOTOX)/LOTW), r:Math.floor((y-LOTOY)/LOTH) });
+function inTerritory(p){ const {c,r}=cellAt(p.x,p.y); return owned.has(cellKey(c,r)); }
+function isExpandable(c,r){
+  if(c<0||c>=LOTCOLS||r<0||r>=LOTROWS||owned.has(cellKey(c,r))) return false;
+  return owned.has(cellKey(c-1,r))||owned.has(cellKey(c+1,r))||owned.has(cellKey(c,r-1))||owned.has(cellKey(c,r+1));
+}
+function expandCost(){ return 5 + (owned.size-1)*7; }
+owned.add(cellKey(START[0],START[1]));
+
+// 小道（歩くと気持ちいい曲線）
+const pathPts = [ [220,980],[420,880],[560,700],[760,640],[900,760],[1080,820],[1300,760] ];
+
+// 装飾物: type ごとに描き分け。y でソートして奥行きを出す。
+const props = [];
+function addProp(type, x, y, extra={}){ props.push(Object.assign({type,x,y}, extra)); }
+
+// 入口アーチ
+addProp('arch', 800, 1090);
+// 木
+[[160,300],[380,220],[600,340],[980,240],[1360,300],[300,640],[1420,560],[520,1020],[1160,1000],[1440,980]]
+  .forEach(([x,y],i)=>addProp('tree', x, y, {sway: rand(0,6.28), scale: rand(.9,1.15)}));
+// のれん屋台（寿司スタンド）
+addProp('stall', 460, 520, {label:'🍣', c:'--salmon'});
+addProp('stall', 1000, 560, {label:'🍵', c:'--tamago'});
+addProp('stall', 720, 900, {label:'🍶', c:'--water'});
+// 提灯
+[[380,760],[860,500],[1120,780],[640,420]].forEach(([x,y])=>addProp('lantern',x,y,{sway:rand(0,6.28)}));
+// ベンチ
+addProp('bench', 700, 780); addProp('bench', 1240, 620);
+// お花クラスタ
+for (let i=0;i<26;i++){
+  addProp('flower', rand(80,W-80), rand(160,H-120),
+    { c:['--salmon','--tamago','--blush','--water'][i%4], sway:rand(0,6.28), s:rand(.8,1.3) });
+}
+
+// ==========================================================
+//  キャラクター（プレイヤー & 住人）
+// ==========================================================
+function makeChar(key, x, y, pal){
+  return { key, x, y, vx:0, vy:0, facing:1, dir:'front', bob:Math.random()*6.28,
+           blink:0, hop:0, pal };
+}
+// 進行方向から向き（正面/後ろ/右/左）を決める
+function faceDir(c, mx, my){
+  if (Math.abs(mx)<0.01 && Math.abs(my)<0.01) return;
+  if (Math.abs(mx) >= Math.abs(my)){ c.dir = mx<0?'left':'right'; c.facing = mx<0?-1:1; }
+  else c.dir = my<0?'back':'front';
+}
+// SSP仮キャラの配色（本物の画像が来たら使われません）
+const palettes = {
+  marty:  { body:'#FBEFD9', neta:'#F4A6A0', belly:'#FFF7EA' }, // サーモン
+  nigiri: { body:'#FBEFD9', neta:'#F5D06B', belly:'#FFF7EA' }, // 玉子
+  gunkan: { body:'#FBEFD9', neta:'#3B4A3A', belly:'#FFF7EA' }, // 海苔巻
+  inari:  { body:'#E7C38A', neta:'#D89B57', belly:'#F5E4C6' }, // いなり
+  tamago: { body:'#FBEFD9', neta:'#F6C6C0', belly:'#FFF7EA' }, // 桜でんぶ
+};
+
+const player = makeChar('marty', 800, 940, palettes.marty);
+
+// 住人たち（ゆるゆる歩き回る）＝ その他キャラ1〜3
+const residents = [
+  makeChar('chara1', 520, 560, palettes.nigiri),
+  makeChar('chara2', 980, 620, palettes.gunkan),
+  makeChar('chara3', 700, 700, palettes.inari),
+  makeChar('chara4', 1250, 460, palettes.tamago),
+  makeChar('chara5', 360, 920, palettes.nigiri),
+  makeChar('chara6', 1180, 980, palettes.gunkan),
+  makeChar('chara4', 900, 320, palettes.tamago),
+  makeChar('chara2', 1380, 820, palettes.gunkan),
+];
+residents.forEach(r=>{ r.wanderT = rand(0,3); r.dx=0; r.dy=0; r.cheered=false; r.guest=false; r.tx=r.x; r.ty=r.y; r.reactT=rand(2,5); r.bounce=0; r.affinity=0; r.stayT=0; r.atHome=false; r.hx=0.5; r.hy=0.6; r.htx=0.5; r.hty=0.6; r.hwanderT=0; });
+const INVITE_MIN = 60;   // この好感度を超えると招待できる（乾杯で上がる）
+
+// ==========================================================
+//  入力（キーボード + スマホパッド + 乾杯）
+// ==========================================================
+const keys = {};
+addEventListener('keydown', e=>{
+  if (document.activeElement && document.activeElement.tagName==='INPUT') return;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  keys[e.key.toLowerCase()] = true;
+  if (!inside && e.key===' ') tryCheer();
+  if (!inside && e.key.toLowerCase()==='e') invite(nearest);
+  if (e.key.toLowerCase()==='f'){
+    if (inside) exitHouse();
+    else if (running && Math.hypot(player.x-houseDoor.x, player.y-houseDoor.y) < 60) enterHouse();
+  }
+  if (!inside && e.key.toLowerCase()==='r') reel();
+});
+addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
+
+// スマホ丸パッド
+let padVec = {x:0,y:0};
+const pad = document.getElementById('pad'), knob = document.getElementById('knob');
+let padId = null;
+function padMove(clientX, clientY){
+  const r = pad.getBoundingClientRect();
+  let dx = clientX - (r.left+r.width/2), dy = clientY - (r.top+r.height/2);
+  const max = r.width/2, d = Math.hypot(dx,dy);
+  if (d>max){ dx*=max/d; dy*=max/d; }
+  knob.style.transform = `translate(${dx}px,${dy}px)`;
+  padVec.x = dx/max; padVec.y = dy/max;
+}
+function padEnd(){ padVec.x=0; padVec.y=0; knob.style.transform='translate(0,0)'; padId=null; }
+pad.addEventListener('touchstart', e=>{ padId=e.changedTouches[0].identifier; padMove(e.touches[0].clientX,e.touches[0].clientY); e.preventDefault();},{passive:false});
+pad.addEventListener('touchmove', e=>{ for(const t of e.touches){ if(t.identifier===padId){ padMove(t.clientX,t.clientY);} } e.preventDefault();},{passive:false});
+pad.addEventListener('touchend', padEnd); pad.addEventListener('touchcancel', padEnd);
+
+document.getElementById('cheer').addEventListener('click', tryCheer);
+document.getElementById('invite').addEventListener('click', ()=> invite(nearest));
+document.getElementById('doorBtn').addEventListener('click', ()=>{
+  if (inside) exitHouse();
+  else if (Math.hypot(player.x-houseDoor.x, player.y-houseDoor.y) < 60) enterHouse();
+});
+document.getElementById('roomDecoBtn').addEventListener('click', ()=> setRoomDeco(!roomDeco));
+document.getElementById('fishBtn').addEventListener('click', reel);
+
+// ─ おうちスクショ（保存＆共有）─
+let photoBlob = null;
+function takePhoto(){
+  try{
+    const RM = roomRect();
+    const off = document.createElement('canvas');
+    off.width = Math.round(RM.w*DPR); off.height = Math.round(RM.h*DPR);
+    const octx = off.getContext('2d');
+    octx.drawImage(canvas, RM.x0*DPR, RM.y0*DPR, RM.w*DPR, RM.h*DPR, 0, 0, off.width, off.height);
+    octx.font = '900 '+Math.round(20*DPR)+'px "Zen Maru Gothic", sans-serif';   // 透かし
+    octx.textAlign='right'; octx.textBaseline='bottom';
+    octx.shadowColor='rgba(74,63,58,.5)'; octx.shadowBlur=4*DPR;
+    octx.fillStyle='rgba(255,255,255,.92)';
+    octx.fillText('🍣 すしむら', off.width-14*DPR, off.height-12*DPR);
+    octx.shadowBlur=0;
+    off.toBlob(b=>{ if(!b){ photoErr(); return; } photoBlob=b;
+      document.getElementById('photoImg').src=URL.createObjectURL(b);
+      document.getElementById('photoModal').hidden=false;
+    }, 'image/png');
+  }catch(e){ photoErr(); }
+}
+function photoErr(){ alert('スクショの保存に失敗しました。画像が別ドメインだと保存できないことがあります（同一ドメインの実サイトでは保存できます）。'); }
+function sharePhoto(){
+  if(!photoBlob) return;
+  const file = new File([photoBlob], 'sushimura.png', {type:'image/png'});
+  if (navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({ files:[file], title:'すしむら', text:'すしむらのおうち🍣' }).catch(()=>{});
+  } else { savePhoto(); }
+}
+function savePhoto(){
+  if(!photoBlob) return;
+  const url=URL.createObjectURL(photoBlob);
+  const a=document.createElement('a'); a.href=url; a.download='sushimura.png'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+document.getElementById('photoBtn').addEventListener('click', takePhoto);
+document.getElementById('photoShare').addEventListener('click', sharePhoto);
+document.getElementById('photoSave').addEventListener('click', savePhoto);
+document.getElementById('photoClose').addEventListener('click', ()=>{ document.getElementById('photoModal').hidden=true; });
+
+// ==========================================================
+//  乾杯メカニクス
+// ==========================================================
+let tension = 0;              // 0〜100
+const effects = [];           // キラキラ・ぴよマークなど
+let nearest = null;
+
+// ─ テンションの自然減衰パラメータ ─
+let cheerGrace = 0;                                 // 乾杯直後の減衰猶予（秒）
+const CHEER_GRACE = 2.2;                            // 乾杯するとこの秒数は下がらない
+const TDECAY_BASE = 0.22, TDECAY_SCALE = 0.006;     // 減衰速度（ゆるめ）
+function tryCheer(){
+  if (!nearest) return;
+  const n = nearest;
+  // 二匹ぴょこっ
+  player.hop = 1; n.hop = 1;
+  // テンションUP（初回はしっかり、以降はちょっと）
+  const gain = n.cheered ? 4 : 12;
+  n.cheered = true;
+  const wasReady = (n.affinity||0) >= INVITE_MIN;
+  n.affinity = Math.min(100, (n.affinity||0) + 20);   // 乾杯で好感度UP
+  if (!wasReady && n.affinity>=INVITE_MIN) effects.push({ kind:'hint', x:n.x, y:n.y-58, life:2, text:'なかよし！🏠まねけるよ' });
+  tension = Math.min(100, tension + gain);
+  cheerGrace = CHEER_GRACE;                          // 乾杯したので少し猶予
+  if (tension > maxTension){ maxTension = tension; if (roomDeco) buildRoomTray(); save(); }
+  updateGauge();
+  // 寿司キラッ＆ぴよマーク
+  const mx = (player.x+n.x)/2, my = (player.y+n.y)/2 - 30;
+  for (let i=0;i<10;i++){
+    effects.push({ kind:'spark', x:mx, y:my, vx:rand(-40,40), vy:rand(-70,-20),
+      life:1, emoji: Math.random()<.5?'🍣':'✨' });
+  }
+  effects.push({ kind:'piyo', x:n.x, y:n.y-46, life:1.4 });
+  effects.push({ kind:'piyo', x:player.x, y:player.y-46, life:1.4 });
+}
+
+function updateGauge(){
+  document.getElementById('fill').style.width = tension+'%';
+  document.getElementById('num').textContent = Math.round(tension)+'%';
+}
+
+// ─ おうちに招く（居心地が高いほど、たくさん招ける）─
+function pickGuestTarget(r){
+  const arr=[...owned]; const k=arr[(Math.random()*arr.length)|0];
+  const [c,rr]=k.split(',').map(Number); const R=cellRect(c,rr);
+  r.tx=rand(R.x0+30,R.x1-30); r.ty=rand(R.y0+45,R.y1-30);
+}
+function guestCount(){ return residents.filter(x=>x.guest).length; }
+function maxGuests(){
+  const cnt = placed.reduce((a,p)=>a+(inTerritory(p)?1:0),0);
+  return Math.min(residents.length, Math.floor(cnt/3));   // 居心地3ごとに1人
+}
+const GUEST_LEAVE_DROP = 10;              // 住人が去るとテンションが下がる量
+function invite(r){
+  if (!r || r.guest) return;
+  if ((r.affinity||0) < INVITE_MIN){
+    effects.push({ kind:'hint', x:player.x, y:player.y-48, life:1.5, text:'もっと乾杯して仲よくなろう💕' });
+    return;
+  }
+  r.guest=true; r.stayT=rand(40,70); pickGuestTarget(r);   // しばらく滞在
+  effects.push({ kind:'get', x:r.x, y:r.y-46, life:1.5, emoji:'🎉' });
+}
+function leaveGuest(r){
+  r.guest=false; r.cheered=false; r.dx=0; r.dy=0; r.wanderT=rand(0.5,1.5);
+  r.bubbleText='またね〜'; r.bubbleUntil=nowMs+2000;
+  effects.push({ kind:'get', x:r.x, y:r.y-46, life:1.4, emoji:'👋' });
+  tension = Math.max(0, tension - GUEST_LEAVE_DROP); updateGauge();   // 去るとテンション減
+}
+
+// ─ 仲よしの住人が、たまに自分から家に遊びに来る（室内にいる）─
+const VISIT_MIN = 60;                     // 好感度がこれ以上だと遊びに来る
+const MAX_VISITORS = 3;                   // 室内にいられる最大人数
+let visitTimer = rand(6, 12);
+function houseVisitors(){ return residents.filter(r=>r.atHome); }
+function assignRoomPos(r){ r.hx=rand(0.2,0.8); r.hy=rand(0.46,0.88); r.htx=rand(0.2,0.8); r.hty=rand(0.46,0.88); r.hwanderT=rand(0.5,2); r.reactT=rand(2,5); r.bounce=0; }
+function rollHouseVisitors(){
+  const vs = houseVisitors();
+  if (vs.length && Math.random()<0.4) vs[(Math.random()*vs.length)|0].atHome=false;   // たまに帰る
+  if (houseVisitors().length < MAX_VISITORS){
+    const elig = residents.filter(r=> !r.atHome && !r.guest && (r.affinity||0)>=VISIT_MIN);
+    if (elig.length && Math.random()<0.6){ const r=elig[(Math.random()*elig.length)|0]; r.atHome=true; assignRoomPos(r); }
+  }
+}
+// ─ 室内にいる住人のリアクション（家具を褒める／話す）─
+const PRAISE_ROOM = ['いいおへや〜','おじゃましてます♪','たのしい！','ここ好き〜','すてきなおうち！','くつろぐ〜'];
+function roomReact(r){
+  if (Math.random()<0.15){ r.dir='front'; r.bubbleText='Bet on it!'; r.bubbleUntil=nowMs+2600; r.bounce=3; if(r.hop<=0)r.hop=1; return; }
+  const near = roomItems.filter(it=> Math.hypot(it.rx-r.hx, it.ry-r.hy) < 0.18);
+  let text;
+  if (near.length && Math.random()<0.7){
+    const it = near[(Math.random()*near.length)|0], nm = ROOM_FURNITURE[it.f];
+    text = PRAISE_ITEM[(Math.random()*PRAISE_ITEM.length)|0].replace('{n}', nm.emoji+nm.name);
+    faceDir(r, it.rx-r.hx, it.ry-r.hy);
+  } else {
+    text = PRAISE_ROOM[(Math.random()*PRAISE_ROOM.length)|0];
+  }
+  r.bubbleText=text; r.bubbleUntil=nowMs+2600; r.bounce=2; if(r.hop<=0)r.hop=1;
+}
+
+// ─ 庭に来たゲストのリアクション（飾りを褒める／喜ぶ）─
+const PRAISE_ITEM = ['その{n}、すてき！','わあ、{n}だ！','{n}いいね〜♪','この{n}、いい感じ！','{n}、にあってる！','{n}かわいい〜'];
+const PRAISE_HOME = ['いい庭だね！','ここ落ちつく〜','おじゃましてます♪','たのしい！','すてきなおうち！','また来たいな〜'];
+function guestReact(r){
+  // 特別リアクション: "Bet on it!"（正面を向いてジャンプ）
+  if (Math.random() < 0.2){
+    r.dir = 'front';                         // 正面を向く
+    r.bubbleText = 'Bet on it!'; r.bubbleUntil = nowMs + 2600;
+    r.bounce = 3; r.hop = 1;                 // ピョンとジャンプ
+    effects.push({ kind:'get', x:r.x,   y:r.y-46, life:1.4, emoji:'✨' });
+    effects.push({ kind:'get', x:r.x-10,y:r.y-40, life:1.2, emoji:'💫' });
+    return;
+  }
+  const near = placed.filter(p=> inTerritory(p) && Math.hypot(p.x-r.x, p.y-r.y) < 200);
+  let text;
+  if (near.length && Math.random()<0.7){
+    const it = near[(Math.random()*near.length)|0], nm = NETA[it.n];
+    text = PRAISE_ITEM[(Math.random()*PRAISE_ITEM.length)|0].replace('{n}', nm.emoji+nm.name);
+    faceDir(r, it.x-r.x, it.y-r.y);        // 褒める飾りの方を向く
+  } else {
+    text = PRAISE_HOME[(Math.random()*PRAISE_HOME.length)|0];
+  }
+  r.bubbleText = text; r.bubbleUntil = nowMs + 2600;
+  r.bounce = 2;                            // このあとピョンピョン跳ねる
+  if (r.hop<=0) r.hop = 1;
+  effects.push({ kind:'get', x:r.x-6, y:r.y-44, life:1.2, emoji:'💕' });
+  if (!reduceMotion) effects.push({ kind:'get', x:r.x+9, y:r.y-52, life:1.5, emoji:'💗' });
+}
+
+// ==========================================================
+//  アイテムあつめ（寿司ネタを拾って「ネタ図鑑」に集める）
+//  ★ テンションが高いほどレアなネタを拾える＝乾杯が効いてくる
+// ==========================================================
+const B = 'https://super-sushi-party.com/image/about/';
+const NETA = [
+  { emoji:'🍳', name:'たまご',   need:0,  rank:'ふつう' },
+  { emoji:'🥒', name:'かっぱ巻', need:0,  rank:'ふつう' },
+  { emoji:'🍤', name:'えび',     need:0,  rank:'ふつう',     img:B+'about_17.png' },
+  { emoji:'🐟', name:'サーモン', need:25, rank:'ちょいレア' },
+  { emoji:'🍣', name:'刺身',     need:25, rank:'ちょいレア', img:B+'about_18.png' },
+  { emoji:'🐙', name:'たこ',     need:25, rank:'ちょいレア', img:B+'about_20.png' },
+  { emoji:'🦑', name:'いか',     need:55, rank:'レア' },
+  { emoji:'🦐', name:'甘えび',   need:55, rank:'レア' },
+  { emoji:'🦀', name:'かに',     need:80, rank:'特上' },
+  { emoji:'🍥', name:'特上ネタ', need:80, rank:'特上' },
+  { emoji:'🐙', name:'タコ',       need:30, rank:'ちょいレア',   img:B+'about_26.png' },
+  { emoji:'🐍', name:'チンアナゴ', need:45, rank:'レア',         img:B+'about_22.png' },
+  { emoji:'⭐', name:'ヒトデ',     need:40, rank:'レア',         img:B+'about_25.png' },
+  { emoji:'🍣', name:'おすしくん', need:95, rank:'スーパーレア', img:B+'about_06.png' },
+  // ─ 大きめの飾り（家具）: shape=形で描く / img=画像。大きいほど必要テンションが高い ─
+  { emoji:'📺', name:'テレビ',     need:35, rank:'かざり',     img:B+'about_10.png', ph:64 },
+  { emoji:'🌷', name:'花壇',       need:15, rank:'かざり',     shape:'flowerbed' },
+  { emoji:'🏮', name:'ちょうちん', need:30, rank:'かざり',     shape:'lantern' },
+  { emoji:'🪑', name:'ベンチ',     need:40, rank:'かざり',     shape:'bench' },
+  { emoji:'🍶', name:'酒樽',       need:50, rank:'レアかざり', shape:'barrel' },
+  { emoji:'🌳', name:'木',         need:65, rank:'レアかざり', shape:'tree' },
+  { emoji:'⛩️', name:'鳥居',       need:82, rank:'特大かざり', shape:'torii' },
+];
+NETA.forEach(n=>{ if(n.img){ const im=new Image(); trackImg(im,n.img); im.src=n.img; n._img=im; } });
+const inv    = new Array(NETA.length).fill(0);     // 手持ち（飾りに使える数）
+const found  = new Array(NETA.length).fill(false); // 図鑑（一度でも見つけた）
+let totalGot = 0;
+const items  = [];        // 地面に落ちているネタ
+const placed = [];        // 村に飾ったネタ {n,x,y}
+let spawnTimer = 0, hintCd = 0;
+
+// ─ 飾りつけモードの状態 ─
+let decoMode = false;
+let brush = null;         // 選択中: ネタのindex / 'pickup' / null
+
+// ─ セーブ（対応環境のみ。無ければ自動でメモリだけで動きます）─
+// ─ 室内の家具（テンションの最高到達値で段階的に開放）─
+const ROOM_FURNITURE = [
+  { emoji:'🪑', name:'いす',       need:0,  shape:'chair' },
+  { emoji:'🪴', name:'しょくぶつ', need:0,  shape:'plant' },
+  { emoji:'🛋️', name:'ソファ',     need:10, shape:'sofa' },
+  { emoji:'📺', name:'テレビ',     need:20, shape:'tv' },
+  { emoji:'🕰️', name:'とけい',     need:30, shape:'clock' },
+  { emoji:'🛏️', name:'ベッド',     need:40, shape:'bed' },
+  { emoji:'🪞', name:'かがみ',     need:50, shape:'mirror' },
+  { emoji:'🏮', name:'ちょうちん', need:60, shape:'lantern' },
+  { emoji:'🐠', name:'すいそう',   need:75, shape:'aquarium' },
+  { emoji:'🎏', name:'こいのぼり', need:90, shape:'koi' },
+];
+const roomItems = [];          // {f, rx, ry}  rx,ry は部屋内の割合(0-1)
+let maxTension = 0;            // これまでの最高テンション（家具開放の基準）
+let roomDeco = false, roomBrush = null;
+
+function save(){ try{ localStorage.setItem('ssp_village_v1',
+  JSON.stringify({ inv, found, totalGot, rice, maxTension, owned:[...owned],
+    placed: placed.map(p=>({n:p.n,x:p.x,y:p.y})),
+    roomItems: roomItems.map(r=>({f:r.f,rx:r.rx,ry:r.ry})) })); }catch(e){} }
+function load(){ try{
+  const s = JSON.parse(localStorage.getItem('ssp_village_v1')); if(!s) return;
+  s.inv   ?.forEach((v,i)=> inv[i]=v||0);
+  s.found ?.forEach((v,i)=> found[i]=!!v);
+  totalGot = s.totalGot || 0;
+  rice = s.rice || 0;
+  maxTension = s.maxTension || 0;
+  (s.owned ||[]).forEach(k=> owned.add(k));
+  (s.placed||[]).forEach(p=> placed.push({ isPlaced:true, n:p.n, x:p.x, y:p.y }));
+  (s.roomItems||[]).forEach(r=> roomItems.push({ f:r.f, rx:r.rx, ry:r.ry }));
+}catch(e){} }
+
+function spawnItem(){
+  // 今のテンションで拾えるネタ中心。たまにレアも置いて“拾いたい”を誘う
+  let pool;
+  if (Math.random() < 0.72){
+    pool = NETA.map((n,i)=>i).filter(i=>NETA[i].need<=tension);
+    if (!pool.length) pool = [0,1,2];
+  } else { pool = NETA.map((n,i)=>i); }
+  const n = pool[(Math.random()*pool.length)|0];
+  items.push({ isItem:true, n, x:rand(90,W-90), y:rand(210,H-100), bob:rand(0,6.28) });
+}
+
+function updateItems(dt){
+  spawnTimer -= dt; hintCd -= dt;
+  if (items.length < CONFIG.maxItems && spawnTimer<=0){ spawnItem(); spawnTimer = 1.4; }
+  for (let i=items.length-1;i>=0;i--){
+    const it = items[i]; it.bob += dt*4;
+    const d = Math.hypot(it.x-player.x, it.y-player.y);
+    if (d < CONFIG.pickupRange){
+      const n = NETA[it.n];
+      if (tension >= n.need){
+        inv[it.n]++; found[it.n]=true; totalGot++; rice++;
+        effects.push({ kind:'get', x:it.x, y:it.y-10, life:1.1, emoji:n.emoji });
+        for (let k=0;k<5;k++) effects.push({ kind:'spark', x:it.x, y:it.y-6,
+          vx:rand(-35,35), vy:rand(-60,-15), life:.9, emoji:'✨' });
+        items.splice(i,1);
+        updateCollectionHUD(); buildTray(); save();
+      } else if (hintCd<=0){
+        effects.push({ kind:'hint', x:it.x, y:it.y-30, life:1.2, text:`乾杯たりない (${n.need}%)` });
+        hintCd = 1.2;
+      }
+    }
+  }
+}
+
+// ─ 図鑑HUDの更新 ─
+function updateCollectionHUD(){
+  document.getElementById('pcount').textContent = totalGot;
+  document.getElementById('zfound').textContent = found.filter(Boolean).length;
+  document.getElementById('ztotal').textContent = NETA.length;
+  document.getElementById('zgrid').innerHTML = NETA.map((n,i)=>{
+    return `<div class="zcell ${found[i]?'':'locked'}">
+      <div class="zemoji">${found[i]?n.emoji:'❔'}</div>
+      <div class="zname">${found[i]?n.name:`乾杯${n.need}%〜`}</div>
+      <div class="zcount">${found[i]?('手持ち×'+inv[i]):n.rank}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─ 飾りつけトレイ（手持ちネタの選択バー）─
+function buildTray(){
+  const inner = document.getElementById('trayInner');
+  let html = `<button class="chip ${brush==='pickup'?'sel':''}" data-b="pickup"><span class="cemoji">🖐</span><small>とる</small></button>`
+           + `<button class="chip ${brush==='expand'?'sel':''}" data-b="expand"><span class="cemoji">🏞️</span><small>🍚${rice}</small></button>`;
+  let any = false;
+  NETA.forEach((n,i)=>{ if (inv[i]>0){ any=true;
+    html += `<button class="chip ${brush===i?'sel':''}" data-b="${i}"><span class="cemoji">${n.emoji}</span><small>×${inv[i]}</small></button>`;
+  }});
+  if (!any) html += `<span class="chip-empty">ネタや飾りを拾うと、ここに出るよ🍣</span>`;
+  inner.innerHTML = html;
+  inner.querySelectorAll('.chip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const b = el.dataset.b;
+      brush = (b==='pickup'||b==='expand') ? b : parseInt(b,10);
+      buildTray();
+    });
+  });
+}
+
+function setDecoMode(on){
+  decoMode = on;
+  if (!on) brush = null;
+  document.getElementById('tray').hidden = !on;
+  const btn = document.getElementById('decoBtn');
+  btn.textContent = on ? '✓ もどる' : '✏️ かざる';
+  btn.classList.toggle('active', on);
+  document.getElementById('cheer').style.display = on ? 'none' : '';
+  if (on) buildTray();
+}
+
+// ─ 画面タップで「置く / とる」─
+canvas.addEventListener('pointerdown', e=>{
+  if (inside){ if(roomDeco) roomTap(e); return; }
+  if (!decoMode || !running) return;
+  const r = canvas.getBoundingClientRect();
+  const wx = (e.clientX - r.left) + camX;
+  const wy = (e.clientY - r.top ) + camY;
+  if (brush==='expand'){
+    const {c,r:rr} = cellAt(wx,wy);
+    if (isExpandable(c,rr)){
+      const cost=expandCost(), R=cellRect(c,rr), cx=(R.x0+R.x1)/2, cy=(R.y0+R.y1)/2;
+      if (rice>=cost){
+        rice-=cost; owned.add(cellKey(c,rr));
+        for(let k=0;k<16;k++) effects.push({ kind:'spark', x:rand(R.x0,R.x1), y:rand(R.y0+20,R.y1-20),
+          vx:rand(-40,40), vy:rand(-70,-10), life:1, emoji:'✨' });
+        effects.push({ kind:'get', x:cx, y:cy, life:1.3, emoji:'🎉' });
+        buildTray(); save();
+      } else {
+        effects.push({ kind:'hint', x:cx, y:cy-10, life:1.2, text:`🍚 たりない (${cost})` });
+      }
+    }
+    return;
+  }
+  if (brush==='pickup'){
+    let bi=-1, bd=44;
+    placed.forEach((p,idx)=>{ const d=Math.hypot(p.x-wx,p.y-wy); if(d<bd){bd=d;bi=idx;} });
+    if (bi>=0){
+      const p = placed[bi]; inv[p.n]++; found[p.n]=true;
+      effects.push({ kind:'get', x:p.x, y:p.y-10, life:1, emoji:NETA[p.n].emoji });
+      placed.splice(bi,1);
+      updateCollectionHUD(); buildTray(); save();
+    }
+  } else if (typeof brush==='number'){
+    if (inv[brush]>0){
+      const x = Math.max(70, Math.min(W-70, wx));
+      const y = Math.max(200, Math.min(H-70, wy));
+      placed.push({ isPlaced:true, n:brush, x, y });
+      inv[brush]--;
+      for (let k=0;k<6;k++) effects.push({ kind:'spark', x, y:y-4,
+        vx:rand(-30,30), vy:rand(-50,-10), life:.7, emoji:'✨' });
+      if (inTerritory({x,y})) effects.push({ kind:'get', x, y:y-14, life:1, emoji:'💕' });
+      if (inv[brush]===0) brush=null;
+      updateCollectionHUD(); buildTray(); save();
+    }
+  }
+});
+document.getElementById('decoBtn').addEventListener('click', ()=> setDecoMode(!decoMode));
+
+// ─ 図鑑ボタン ─
+const zukan = document.getElementById('zukan');
+document.getElementById('pill').addEventListener('click', ()=>{ zukan.hidden=!zukan.hidden; });
+document.getElementById('zclose').addEventListener('click', ()=>{ zukan.hidden=true; });
+
+// ─ 初期化 ─
+load();
+for (let i=0;i<CONFIG.maxItems;i++) spawnItem();   // 地面にばらまく
+updateCollectionHUD();
+
+// ==========================================================
+//  チャット & マルチプレイ（他のユーザーの参加・コメント）
+// ==========================================================
+const NAMES=['まぐろ','いくら','うに','たまご','サーモン','えんがわ','こはだ','あなご'];
+let myName = NAMES[(Math.random()*NAMES.length)|0]+((Math.random()*90+10)|0);
+const myPal = palettes.marty;
+let myId = null;
+const peers = {};                 // 他ユーザー id -> キャラ
+let nowMs = 0, moveT = 0;
+const chatLog = [];
+
+document.getElementById('nameInput').value = myName;
+
+function peerPal(id){ const arr=Object.values(palettes); let h=0;
+  for(const c of (''+id)) h=(h*31+c.charCodeAt(0))|0; return arr[Math.abs(h)%arr.length]; }
+
+function addPeer(info){
+  if(!info || info.id===myId || peers[info.id]) return;
+  peers[info.id] = { isPeer:true, id:info.id, name:info.name||'ゲスト', key:info.key,
+    x:info.x||800, y:info.y||940, tx:info.x||800, ty:info.y||940, facing:info.facing||1,
+    pal: info.pal || peerPal(info.id), bob:Math.random()*6.28, blink:0, hop:0,
+    wanderT:rand(1,3), chatT:rand(4,9) };
+}
+
+function onChatMsg(m){
+  const until = nowMs + CONFIG.bubbleMs;
+  if(!m._history){
+    if(m.id===myId){ player.bubbleText=m.text; player.bubbleUntil=until; }
+    else if(peers[m.id]){ peers[m.id].bubbleText=m.text; peers[m.id].bubbleUntil=until; }
+  }
+  addLog(m.name||'？', m.text);
+}
+
+// ─ ローカル用bot（サーバーなしでも吹き出し＆ログを体験できる）─
+const BOT_LINES=['いらっしゃい〜','この庭かわいい！','いっしょに乾杯しよ🍣','いい感じ✨','鳥居まで作ったの！？','ちょうちん借りていい？','てんしょんMAX！'];
+function spawnBots(){
+  addPeer({ id:'bot1', name:'いくら丸',   x:600,  y:700, facing:-1, pal:palettes.gunkan, key:'chara1' });
+  addPeer({ id:'bot2', name:'たまちゃん', x:1000, y:820, facing:1,  pal:palettes.tamago, key:'chara2' });
+}
+function updateBots(dt){
+  for(const id of ['bot1','bot2']){ const b=peers[id]; if(!b) continue;
+    b.wanderT-=dt; b.chatT-=dt;
+    if(b.wanderT<=0){ b.tx=rand(200,W-200); b.ty=rand(300,H-200); b.wanderT=rand(2,4.5); }
+    if(b.chatT<=0){ onChatMsg({ id, name:b.name, text:BOT_LINES[(Math.random()*BOT_LINES.length)|0] }); b.chatT=rand(7,13); }
+  }
+}
+
+// ─ 通信層（ローカル / WebSocket 切替）─
+function makeLocalNet(){
+  let h={};
+  return { isLocal:true,
+    connect(opts){ h=opts; myId='me'; h.onReady('me',[]); },
+    move(){}, chat(text){ h.onChat({ id:'me', name:myName, text, ts:Date.now() }); } };
+}
+function makeWSNet(url){
+  let ws, h={};
+  return { isLocal:false,
+    connect(opts){ h=opts;
+      try{ ws=new WebSocket(url); }catch(e){ console.warn('WS失敗、ローカル動作',e); h.onReady('me',[]); return; }
+      ws.onopen=()=>{ const p=h.getPos(); ws.send(JSON.stringify({t:'join',name:h.name,pal:h.pal,x:p.x,y:p.y,facing:p.facing})); };
+      ws.onmessage=e=>{ let m; try{m=JSON.parse(e.data);}catch(_){return;}
+        if(m.t==='welcome'){ h.onReady(m.id, m.peers||[]); }
+        else if(m.t==='join'){ h.onJoin(m); }
+        else if(m.t==='move'){ h.onMove(m.id,m.x,m.y,m.facing); }
+        else if(m.t==='leave'){ h.onLeave(m.id); }
+        else if(m.t==='chat'){ h.onChat(m); }
+      };
+      ws.onclose=()=>{}; ws.onerror=()=>{};
+    },
+    move(x,y,f){ if(ws&&ws.readyState===1) ws.send(JSON.stringify({t:'move',x,y,facing:f})); },
+    chat(text){ if(ws&&ws.readyState===1) ws.send(JSON.stringify({t:'chat',text})); } };
+}
+// ─ Supabase版 Net（匿名認証・4隅スロット・位置Broadcast・ログ）─
+function makeSupabaseNet(url, key){
+  const sb = window.supabase.createClient(url, key, { auth:{ persistSession:true, autoRefreshToken:true } });
+  let h=null, ch=null, myUid=null, mySlotN=-1, hb=null; const seen={};
+  async function connect(opts){
+    h=opts;
+    try{
+      let { data:g } = await sb.auth.getUser(); let user=g&&g.user;
+      if(!user){ const r=await sb.auth.signInAnonymously(); if(r.error) throw r.error; user=r.data.user; }
+      myUid = user.id; console.log('[SSP] signed in uid:', myUid, 'anon:', user.is_anonymous);
+    }catch(e){ console.warn('[SSP] 匿名認証に失敗、ローカル動作', e); h.onReady('me',[]); if(CONFIG.localChatDemo) spawnBots(); return; }
+    try{ const { data, error } = await sb.rpc('claim_slot', { p_name:h.name });
+      if(error) console.warn('[SSP] claim_slot error:', error);
+      else console.log('[SSP] claim_slot ->', data);
+      mySlotN = (error||data==null)?-1:data; }
+    catch(e){ console.warn('[SSP] claim_slot exception:', e); mySlotN=-1; }
+    if (typeof h.onSlot==='function') h.onSlot(mySlotN);
+    ch = sb.channel('ssp-world', { config:{ broadcast:{ self:false }, presence:{ key:myUid } } });
+    ch.on('broadcast', { event:'move' }, ({ payload:p })=>{
+      if(!p || p.id===myUid) return;
+      if(!seen[p.id]){ seen[p.id]=true; h.onJoin({ id:p.id, name:p.name||'ゲスト', x:p.x, y:p.y, facing:p.facing||1, key:'marty' }); }
+      h.onMove(p.id, p.x, p.y, p.facing||1);
+    });
+    ch.on('presence', { event:'leave' }, ({ key })=>{ if(key && seen[key]){ delete seen[key]; h.onLeave(key); } });
+    await ch.subscribe(async (st)=>{ if(st==='SUBSCRIBED'){ try{ await ch.track({ uid:myUid, name:h.name, slot:mySlotN }); }catch(e){} } });
+    sb.channel('ssp-logs').on('postgres_changes', { event:'INSERT', schema:'public', table:'logs' },
+      ({ new:row })=> h.onChat({ id:row.player_id, name:row.name, text:row.text, ts:Date.parse(row.ts) })).subscribe();
+    try{ const { data } = await sb.from('logs').select('*').order('ts',{ascending:false}).limit(60);
+      (data||[]).reverse().forEach(row=> h.onChat({ id:row.player_id, name:row.name, text:row.text, ts:Date.parse(row.ts), _history:true })); }catch(e){}
+    h.onReady(myUid, []);
+    hb = setInterval(()=>{ sb.rpc('heartbeat').then(()=>{},()=>{}); }, 10000);
+    window.addEventListener('beforeunload', ()=>{ try{ sb.rpc('release_slot'); }catch(e){} });
+  }
+  return {
+    isLocal:false, isSupabase:true, connect,
+    move(x,y,f){ if(ch) ch.send({ type:'broadcast', event:'move', payload:{ id:myUid, name:h&&h.name, x:Math.round(x), y:Math.round(y), facing:f } }); },
+    chat(text){ sb.rpc('post_log', { p_text:text, p_name:h&&h.name }).then(()=>{}, e=>console.warn('post_log', e)); },
+    saveHouse(data){ return sb.rpc('save_house', { p_data:data, p_name:h&&h.name }); },
+    async loadHouse(){ try{ const { data } = await sb.from('houses').select('data').eq('player_id', myUid).maybeSingle(); return data?data.data:null; }catch(e){ return null; } },
+    getSlot(){ return mySlotN; }
+  };
+}
+
+const Net = (CONFIG.supabaseUrl && window.supabase)
+  ? makeSupabaseNet(CONFIG.supabaseUrl, CONFIG.supabaseKey)
+  : (CONFIG.serverUrl ? makeWSNet(CONFIG.serverUrl) : makeLocalNet());
+
+// ─ 4隅のスロット割り当て（0=左上, 1=右上, 2=左下, 3=右下, -1=観戦）─
+let mySlot = -1;
+const CORNERS = [ [280,300], [W-280,300], [280,H-260], [W-280,H-260] ];
+function applySlot(slot){
+  mySlot = slot;
+  const c = (slot>=0 && slot<4) ? CORNERS[slot] : [W/2, H*0.5];
+  player.x = c[0]; player.y = c[1];
+  const sp=document.getElementById('spectate'); if(sp) sp.hidden = (slot!==-1);
+}
+
+function initNet(){
+  Net.connect({
+    name: myName, pal: myPal, getPos:()=>({x:player.x,y:player.y,facing:player.facing}),
+    onReady:(id,ps)=>{ myId=id; ps.forEach(addPeer); if(Net.isLocal && CONFIG.localChatDemo) spawnBots(); },
+    onJoin: addPeer,
+    onMove:(id,x,y,f)=>{ const p=peers[id]; if(p){ p.tx=x; p.ty=y; p.facing=f; } },
+    onLeave:(id)=>{ delete peers[id]; },
+    onChat: onChatMsg,
+    onSlot: applySlot,
+  });
+}
+
+// ─ チャットUIの配線 ─
+const chatBar = document.getElementById('chatBar');
+document.getElementById('chatToggle').addEventListener('click', ()=>{
+  chatBar.hidden=!chatBar.hidden;
+  if(!chatBar.hidden) document.getElementById('chatInput').focus();
+});
+function sendChat(){ const el=document.getElementById('chatInput'); const t=el.value.trim();
+  if(!t) return; Net.chat(t); el.value=''; }
+document.getElementById('chatSend').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+
+// ─ 折りたたみログ ─
+const logPanel = document.getElementById('logPanel');
+document.getElementById('logTab').addEventListener('click', ()=> logPanel.classList.toggle('collapsed'));
+document.getElementById('logClose').addEventListener('click', ()=> logPanel.classList.add('collapsed'));
+function addLog(name, text){
+  chatLog.push({name,text}); if(chatLog.length>60) chatLog.shift();
+  const list=document.getElementById('logList');
+  const d=document.createElement('div'); d.className='log-item';
+  const b=document.createElement('b'), s=document.createElement('span'), em=document.createElement('em');
+  b.textContent=name; s.textContent=text;
+  em.textContent=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  d.append(b, document.createTextNode(' '), s, em);
+  list.appendChild(d); list.scrollTop=list.scrollHeight;
+}
+
+// ─ 吹き出し描画（文字は自動折り返し）─
+function drawBubble(x, y, text){
+  ctx.font='700 13px "M PLUS Rounded 1c","Zen Maru Gothic"';
+  const maxW=150, lines=[]; let line='';
+  for(const ch of text){ if(ctx.measureText(line+ch).width>maxW){ lines.push(line); line=ch; } else line+=ch; }
+  if(line) lines.push(line);
+  const lh=17, padX=11, padY=7;
+  let w=0; lines.forEach(l=> w=Math.max(w, ctx.measureText(l).width));
+  w=Math.min(maxW,w)+padX*2; const h=lines.length*lh+padY*2;
+  const bx=x-w/2, by=y-h;
+  ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(74,63,58,.15)'; ctx.lineWidth=2;
+  roundRect(bx,by,w,h,12); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-6,by+h-1); ctx.lineTo(x+6,by+h-1); ctx.lineTo(x,by+h+8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=C.ink; ctx.textAlign='center'; ctx.textBaseline='middle';
+  lines.forEach((l,i)=> ctx.fillText(l, x, by+padY+lh/2+i*lh));
+}
+
+// ─ 他ユーザーの描画（キャラ＋なまえ＋吹き出し）─
+function drawPeer(p){
+  shadow(p.x, p.y+26, 20);
+  drawCharSprite(p);
+  ctx.font='900 11px "Zen Maru Gothic"'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const w=ctx.measureText(p.name).width+16;
+  ctx.fillStyle='rgba(255,255,255,.85)'; roundRect(p.x-w/2, p.y+30, w, 16, 8); ctx.fill();
+  ctx.fillStyle=C.ink; ctx.fillText(p.name, p.x, p.y+38);
+  if(p.bubbleUntil && nowMs<p.bubbleUntil && p.bubbleText) drawBubble(p.x, p.y-56, p.bubbleText);
+}
+
+// ==========================================================
+//  更新ロジック
+// ==========================================================
+let camX = player.x - VW/2, camY = player.y - VH/2;
+
+// ==========================================================
+//  家の中に入る（室内シーン）
+// ==========================================================
+let inside=false, savedPos=null;
+const _hs = cellRect(START[0], START[1]);
+const houseDoor = { x:(_hs.x0+_hs.x1)/2, y:_hs.y0+58+22 };   // 玄関の位置（村の座標）
+function roomRect(){ const w=Math.min(VW-40,860), h=Math.min(VH-40,600), x0=(VW-w)/2, y0=(VH-h)/2; return {x0,y0,x1:x0+w,y1:y0+h,w,h}; }
+function roomDoor(RM){ return { x:(RM.x0+RM.x1)/2, y:RM.y1-40 }; }
+function enterHouse(){ savedPos={x:player.x,y:player.y}; inside=true; const RM=roomRect(); player.x=RM.x0+RM.w/2; player.y=RM.y0+RM.h*0.55; player.dir='front'; document.body.classList.add('inside'); }
+function exitHouse(){ inside=false; if(savedPos){player.x=savedPos.x;player.y=savedPos.y;} player.dir='front'; setRoomDeco(false); document.body.classList.remove('inside'); document.getElementById('doorBtn').style.display='none'; }
+
+function updateInside(dt){
+  let ix=0, iy=0;
+  if (keys['arrowleft']||keys['a']) ix-=1;
+  if (keys['arrowright']||keys['d']) ix+=1;
+  if (keys['arrowup']||keys['w']) iy-=1;
+  if (keys['arrowdown']||keys['s']) iy+=1;
+  ix += padVec.x; iy += padVec.y;
+  const mag=Math.hypot(ix,iy); if(mag>1){ix/=mag;iy/=mag;}
+  player.x += ix*CONFIG.player.speed*dt; player.y += iy*CONFIG.player.speed*dt;
+  const RM=roomRect();
+  player.x=Math.max(RM.x0+34, Math.min(RM.x1-34, player.x));
+  player.y=Math.max(RM.y0+RM.h*0.34+20, Math.min(RM.y1-26, player.y));
+  if (ix!==0||iy!==0) faceDir(player, ix, iy);
+  player.bob += dt*(mag>0.05?11:3);
+  // 室内にいる住人（遊びに来た子）をゆるく歩かせる
+  for (const r of residents){
+    if (!r.atHome) continue;
+    const dx=r.htx-r.hx, dy=r.hty-r.hy, d=Math.hypot(dx,dy);
+    if (d>0.02){ r.hx+=dx/d*0.11*dt; r.hy+=dy/d*0.11*dt; faceDir(r, dx, dy); }
+    else { r.hwanderT-=dt; if(r.hwanderT<=0){ r.htx=rand(0.2,0.8); r.hty=rand(0.46,0.88); r.hwanderT=rand(1.5,3.5); } }
+    r.bob += dt*((d>0.02)?9:3);
+    if (r.hop>0) r.hop=Math.max(0,r.hop-dt*3);
+    else if (r.bounce>0){ r.hop=1; r.bounce--; }
+    r.reactT -= dt;
+    if (r.reactT<=0 && d<=0.02){ roomReact(r); r.reactT = rand(3.5,7); }
+  }
+  const dr=roomDoor(RM);
+  const nearDoor = Math.hypot(player.x-dr.x, player.y-dr.y) < 110;
+  const db=document.getElementById('doorBtn'); db.style.display = nearDoor?'block':'none'; db.textContent='🚪 そと';
+  if (Math.hypot(player.x-dr.x, player.y-dr.y) < 28) exitHouse();
+}
+
+// ─ 室内家具の絵 ─
+function drawFurniture(shape, x, y){
+  const t = nowMs*0.002;
+  switch(shape){
+    case 'chair':
+      shadow(x, y+2, 18);
+      ctx.fillStyle='#C69B6B';
+      roundRect(x-16,y-16,32,8,3); ctx.fill();                         // 座面
+      roundRect(x-14,y-40,6,26,3); ctx.fill(); roundRect(x+8,y-40,6,26,3); ctx.fill();
+      roundRect(x-14,y-40,28,6,3); ctx.fill();                         // 背もたれ
+      ctx.fillRect(x-14,y-8,5,12); ctx.fillRect(x+9,y-8,5,12);         // 脚
+      ctx.fillStyle=C.salmon; roundRect(x-14,y-19,28,7,3); ctx.fill(); // クッション
+      break;
+    case 'plant':
+      shadow(x, y+2, 16);
+      ctx.fillStyle=C.grassDeep;
+      for(let i=-1;i<=1;i++){ ctx.save(); ctx.translate(x,y-13); ctx.rotate(i*0.5);
+        ctx.beginPath(); ctx.ellipse(0,-20,8,22,0,0,6.28); ctx.fill(); ctx.restore(); }
+      ctx.fillStyle='#C9E0BC'; ctx.beginPath(); ctx.ellipse(x-3,y-32,6,16,-0.3,0,6.28); ctx.fill();
+      ctx.fillStyle=C.salmon;
+      ctx.beginPath(); ctx.moveTo(x-14,y-13); ctx.lineTo(x+14,y-13); ctx.lineTo(x+10,y+2); ctx.lineTo(x-10,y+2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#E88F88'; ctx.fillRect(x-15,y-15,30,4);
+      break;
+    case 'sofa':
+      shadow(x, y+4, 40);
+      ctx.fillStyle='#F6B6B0'; roundRect(x-42,y-34,84,20,8); ctx.fill();        // 背
+      ctx.fillStyle=C.salmon;  roundRect(x-42,y-18,84,22,10); ctx.fill();       // 座
+      ctx.fillStyle='#F6B6B0'; roundRect(x-46,y-26,12,30,6); ctx.fill(); roundRect(x+34,y-26,12,30,6); ctx.fill(); // 肘
+      ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(x-30,y-16,26,14,5); ctx.fill(); roundRect(x+4,y-16,26,14,5); ctx.fill();
+      break;
+    case 'tv':
+      shadow(x, y+2, 30);
+      ctx.fillStyle='#C69B6B'; ctx.fillRect(x-38,y-2,76,8);                     // 台
+      ctx.fillStyle=C.nori; roundRect(x-34,y-32,68,32,5); ctx.fill();           // 枠
+      ctx.fillStyle='#8FB8C9'; ctx.fillRect(x-28,y-27,56,22);                   // 画面
+      ctx.fillStyle='rgba(255,255,255,.25)'; ctx.beginPath(); ctx.moveTo(x-28,y-27); ctx.lineTo(x-8,y-27); ctx.lineTo(x-22,y-5); ctx.lineTo(x-28,y-5); ctx.closePath(); ctx.fill();
+      break;
+    case 'clock':
+      shadow(x, y+2, 13);
+      ctx.fillStyle='#C69B6B'; roundRect(x-12,y-52,24,54,6); ctx.fill();
+      ctx.fillStyle='#FFF7EA'; ctx.beginPath(); ctx.arc(x,y-40,9,0,6.28); ctx.fill();
+      ctx.strokeStyle=C.ink; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(x,y-40); ctx.lineTo(x,y-46); ctx.moveTo(x,y-40); ctx.lineTo(x+5,y-40); ctx.stroke();
+      ctx.fillStyle=C.tamago; ctx.beginPath(); ctx.arc(x+Math.sin(t*2)*4, y-14, 4, 0, 6.28); ctx.fill(); // 振り子
+      break;
+    case 'bed':
+      shadow(x, y+4, 46);
+      ctx.fillStyle='#C69B6B'; roundRect(x-46,y-40,12,40,4); ctx.fill();        // ヘッドボード
+      ctx.fillStyle='#F3E7CE'; roundRect(x-44,y-22,90,24,8); ctx.fill();        // マットレス
+      ctx.fillStyle=C.salmon;  roundRect(x-8,y-22,54,24,8); ctx.fill();         // 掛け布団
+      ctx.fillStyle='#FFF7EA'; roundRect(x-40,y-26,26,14,6); ctx.fill();        // 枕
+      break;
+    case 'mirror':
+      shadow(x, y+2, 13);
+      ctx.fillStyle='#E3BE86'; roundRect(x-16,y-52,32,54,14); ctx.fill();
+      ctx.fillStyle='#D8E8E4'; roundRect(x-11,y-47,22,44,10); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.4)'; ctx.beginPath(); ctx.moveTo(x-8,y-44); ctx.lineTo(x+2,y-44); ctx.lineTo(x-6,y-16); ctx.lineTo(x-8,y-16); ctx.closePath(); ctx.fill();
+      break;
+    case 'lantern':
+      shadow(x, y+2, 13);
+      ctx.fillStyle='#8a6b45'; ctx.fillRect(x-14,y-2,28,4);
+      ctx.fillStyle='#F7E7C8'; roundRect(x-12,y-42,24,40,4); ctx.fill();
+      ctx.strokeStyle='rgba(198,155,107,.6)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x-12,y-30); ctx.lineTo(x+12,y-30); ctx.moveTo(x-12,y-16); ctx.lineTo(x+12,y-16); ctx.stroke();
+      ctx.fillStyle='#C69B6B'; ctx.fillRect(x-13,y-46,26,5);
+      break;
+    case 'aquarium':
+      shadow(x, y+2, 26);
+      ctx.fillStyle='#C69B6B'; ctx.fillRect(x-30,y-2,60,6);
+      ctx.fillStyle='rgba(169,214,208,.85)'; roundRect(x-30,y-34,60,32,4); ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=3; roundRect(x-30,y-34,60,32,4); ctx.stroke();
+      ctx.font='14px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🐟', x-8+Math.sin(t*2)*6, y-18);
+      ctx.fillStyle=C.grassDeep; ctx.fillRect(x+14,y-20,4,16); ctx.fillRect(x+20,y-24,4,20);
+      break;
+    case 'koi':
+      shadow(x, y+2, 12);
+      ctx.strokeStyle='#8a6b45'; ctx.lineWidth=4; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(x-18,y+2); ctx.lineTo(x-18,y-58); ctx.stroke();
+      const cols=[C.nori,C.salmon,C.water];
+      for(let i=0;i<3;i++){ const cy=y-52+i*16, wob=Math.sin(t*3+i)*3; ctx.fillStyle=cols[i];
+        ctx.beginPath(); ctx.moveTo(x-14,cy); ctx.quadraticCurveTo(x+10,cy-5+wob,x+24,cy+wob);
+        ctx.quadraticCurveTo(x+16,cy+3,x+24,cy+8+wob); ctx.quadraticCurveTo(x+10,cy+9+wob,x-14,cy+8); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x-9,cy+3,2,0,6.28); ctx.fill(); }
+      break;
+  }
+}
+
+function renderRoom(){
+  const RM=roomRect();
+  ctx.fillStyle='#E4D8BE'; ctx.fillRect(0,0,VW,VH);
+  ctx.fillStyle='#F3E7CE'; ctx.fillRect(RM.x0,RM.y0,RM.w,RM.h);         // 床
+  const wallH=RM.h*0.34;
+  ctx.fillStyle='#F8EFDB'; ctx.fillRect(RM.x0,RM.y0,RM.w,wallH);        // 壁
+  ctx.fillStyle='rgba(198,155,107,.5)'; ctx.fillRect(RM.x0,RM.y0+wallH-3,RM.w,3);
+  ctx.strokeStyle='rgba(198,155,107,.22)'; ctx.lineWidth=2;             // 板目
+  for(let y=RM.y0+wallH+8; y<RM.y1; y+=26){ ctx.beginPath(); ctx.moveTo(RM.x0,y); ctx.lineTo(RM.x1,y); ctx.stroke(); }
+  const wx=RM.x0+RM.w*0.16, wy=RM.y0+22, ww=120, wh=82;                 // 窓
+  ctx.fillStyle=C.water; ctx.fillRect(wx,wy,ww,wh);
+  ctx.fillStyle='#CFE3C4'; ctx.fillRect(wx,wy+wh*0.62,ww,wh*0.38);
+  ctx.fillStyle='#F5D06B'; ctx.beginPath(); ctx.arc(wx+ww*0.75,wy+wh*0.3,12,0,6.28); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=6; ctx.strokeRect(wx,wy,ww,wh);
+  ctx.beginPath(); ctx.moveTo(wx+ww/2,wy); ctx.lineTo(wx+ww/2,wy+wh); ctx.moveTo(wx,wy+wh/2); ctx.lineTo(wx+ww,wy+wh/2); ctx.stroke();
+  const px=RM.x0+RM.w*0.56, py=RM.y0+28;                                // 額
+  ctx.fillStyle='#C69B6B'; ctx.fillRect(px,py,84,58);
+  ctx.fillStyle='#fff'; ctx.fillRect(px+6,py+6,72,46);
+  ctx.font='30px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🍣',px+42,py+29);
+  ctx.fillStyle='rgba(244,166,160,.3)';                                 // ラグ
+  ctx.beginPath(); ctx.ellipse((RM.x0+RM.x1)/2, RM.y0+RM.h*0.64, RM.w*0.26, RM.h*0.13,0,0,6.28); ctx.fill();
+  const dr=roomDoor(RM);                                                // ドア（外へ）
+  ctx.fillStyle='#B5895A'; roundRect(dr.x-28, dr.y-30, 56, 70, 8); ctx.fill();
+  ctx.fillStyle='#9c7549'; roundRect(dr.x-22, dr.y-24, 44, 58, 6); ctx.fill();
+  ctx.fillStyle=C.tamago; ctx.beginPath(); ctx.arc(dr.x+14, dr.y+6, 3,0,6.28); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='900 12px "Zen Maru Gothic"'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('そと', dr.x, dr.y-42);
+  // 置いた家具＋プレイヤーを y ソートで（奥行き）
+  const drawn = roomItems.map(it=>({ it, x:RM.x0+it.rx*RM.w, y:RM.y0+it.ry*RM.h }));
+  drawn.push({ me:true, x:player.x, y:player.y });
+  for (const r of residents){ if(r.atHome) drawn.push({ vis:r, x:RM.x0+r.hx*RM.w, y:RM.y0+r.hy*RM.h }); }
+  drawn.sort((a,b)=>a.y-b.y);
+  for(const d of drawn){
+    if(d.me){ shadow(d.x, d.y+26, 20); drawCharSprite(player); }
+    else if(d.vis){ const r=d.vis, ox=r.x, oy=r.y; r.x=d.x; r.y=d.y;
+      shadow(r.x, r.y+26, 20); drawCharSprite(r);
+      if (r.bubbleUntil && nowMs<r.bubbleUntil && r.bubbleText) drawBubble(r.x, r.y-58, r.bubbleText);
+      r.x=ox; r.y=oy; }
+    else {
+      drawFurniture(ROOM_FURNITURE[d.it.f].shape, d.x, d.y);
+      if(roomDeco && roomBrush==='pickup'){
+        ctx.strokeStyle='rgba(244,166,160,.9)'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.arc(d.x, d.y-18, 32, 0, 6.28); ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
+  }
+  ctx.fillStyle='rgba(74,63,58,.45)'; ctx.font='900 13px "Zen Maru Gothic"'; ctx.textAlign='center';
+  ctx.fillText('ドアから そとへ', dr.x, dr.y+52);
+}
+
+// ─ 室内の家具を置く／とる ─
+function roomTap(e){
+  const r = canvas.getBoundingClientRect();
+  const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  const RM = roomRect(), floorTop = RM.y0 + RM.h*0.34;
+  if (roomBrush==='pickup'){
+    let bi=-1, bd=42;
+    roomItems.forEach((it,idx)=>{ const ix=RM.x0+it.rx*RM.w, iy=RM.y0+it.ry*RM.h; const d=Math.hypot(ix-sx,iy-sy); if(d<bd){bd=d;bi=idx;} });
+    if(bi>=0){ roomItems.splice(bi,1); buildRoomTray(); save(); }
+    return;
+  }
+  if (typeof roomBrush==='number'){
+    if (ROOM_FURNITURE[roomBrush].need > maxTension) return;   // 未開放
+    const x=Math.max(RM.x0+30, Math.min(RM.x1-30, sx));
+    const y=Math.max(floorTop+14, Math.min(RM.y1-30, sy));
+    roomItems.push({ f:roomBrush, rx:(x-RM.x0)/RM.w, ry:(y-RM.y0)/RM.h });
+    save();
+  }
+}
+function buildRoomTray(){
+  const inner=document.getElementById('roomTrayInner');
+  let html=`<button class="chip ${roomBrush==='pickup'?'sel':''}" data-b="pickup"><span class="cemoji">🖐</span><small>とる</small></button>`;
+  ROOM_FURNITURE.forEach((f,i)=>{
+    const locked = f.need > maxTension;
+    html += `<button class="chip ${roomBrush===i?'sel':''} ${locked?'locked':''}" data-b="${i}" ${locked?'data-lock="1"':''}>`+
+            `<span class="cemoji">${locked?'🔒':f.emoji}</span><small>${locked?('T'+f.need):f.name}</small></button>`;
+  });
+  inner.innerHTML=html;
+  inner.querySelectorAll('.chip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(el.dataset.lock) return;                 // ロック中は選べない
+      const b=el.dataset.b;
+      roomBrush = (b==='pickup') ? 'pickup' : parseInt(b,10);
+      buildRoomTray();
+    });
+  });
+}
+function setRoomDeco(on){
+  roomDeco=on; if(!on) roomBrush=null;
+  document.getElementById('roomTray').hidden=!on;
+  const b=document.getElementById('roomDecoBtn');
+  b.classList.toggle('active',on); b.textContent= on?'✓ もどる':'🪑 かぐ';
+  if(on) buildRoomTray();
+}
+
+// ─ 釣り（池のふちで つる）─
+let fishState='idle', fishBiteAt=0, fishBiteEnd=0, bobX=0, bobY=0;
+let reelProg=0, reelEnd=0, pendingFish=-1;
+function vibe(p){ if(navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} } }   // Android等のみ
+function isRare(idx){ return ['レア','特上','スーパーレア'].includes(NETA[idx].rank); }
+function rollFish(){
+  const sk = NETA.findIndex(n=>n.name==='おすしくん');
+  if (sk>=0 && Math.random()<0.03) return sk;                     // スーパーレア3%
+  const pool = NETA.map((n,i)=>i).filter(i=>!NETA[i].shape && NETA[i].name!=='おすしくん');
+  const a=pool[(Math.random()*pool.length)|0], b=pool[(Math.random()*pool.length)|0];
+  return NETA[a].need<=NETA[b].need?a:b;                          // コモン寄り
+}
+function pondE(){ const dx=(player.x-pond.x)/pond.rx, dy=(player.y-pond.y)/pond.ry; return Math.hypot(dx,dy); }
+function nearPond(){ return pondE() < 1.6; }
+function keepOutOfPond(o){   // 池（楕円）の中に入れない：ふちへ押し戻す
+  const nx=(o.x-pond.x)/pond.rx, ny=(o.y-pond.y)/pond.ry, e=Math.hypot(nx,ny);
+  if (e<1 && e>0.0001){ o.x=pond.x+(nx/e)*pond.rx; o.y=pond.y+(ny/e)*pond.ry; }
+}
+function startFishing(){
+  if (fishState!=='idle' || !nearPond()) return;
+  const dx=pond.x-player.x, dy=pond.y-player.y, d=Math.hypot(dx,dy)||1;
+  bobX=player.x+dx/d*70; bobY=player.y+dy/d*70;
+  fishState='wait'; fishBiteAt=nowMs+rand(1500,4000); faceDir(player, dx, dy);
+}
+function reel(){
+  if (fishState==='bite'){
+    const idx=rollFish();
+    if (isRare(idx)){ fishState='reeling'; pendingFish=idx; reelProg=26; reelEnd=nowMs+6000; vibe(30); }
+    else { catchFish(idx); fishState='idle'; }
+  } else if (fishState==='reeling'){
+    reelProg += (NETA[pendingFish].rank==='スーパーレア'?9:12); vibe(18);   // 連打で引き寄せる
+  } else if (fishState==='idle') startFishing();
+}
+function catchFish(idx){
+  const nm=NETA[idx], sr = nm.rank==='スーパーレア';
+  inv[idx]++; found[idx]=true; totalGot++; rice++;
+  vibe(sr ? [0,70,50,120] : (isRare(idx) ? [0,50,40] : 40));
+  effects.push({kind:'get',  x:bobX, y:bobY-12, life:1.8, emoji:nm.emoji});
+  effects.push({kind:'hint', x:bobX, y:bobY-36, life:2, text:(sr?'✨スーパーレア✨ ':'🎣 ')+nm.name+' つれた！'});
+  for(let k=0;k<(sr?16:8);k++) effects.push({kind:'spark', x:bobX, y:bobY-4, vx:rand(-45,45), vy:rand(-80,-15), life:1.1, emoji:sr?'🌟':'✨'});
+  updateCollectionHUD(); if(decoMode) buildTray(); save();
+}
+function drawFishing(){
+  if (fishState==='idle') return;
+  const dirx = (bobX>=player.x) ? 1 : -1;
+  const gripX=player.x+dirx*4, gripY=player.y-4;      // 手元
+  const tipX=player.x+dirx*36, tipY=player.y-50;      // 竿先
+  ctx.lineCap='round';
+  ctx.strokeStyle='#C69B6B'; ctx.lineWidth=5;         // グリップ
+  ctx.beginPath(); ctx.moveTo(gripX-dirx*8, gripY+7); ctx.lineTo(gripX, gripY); ctx.stroke();
+  ctx.strokeStyle='#8a6b45'; ctx.lineWidth=3.5;       // 竿
+  ctx.beginPath(); ctx.moveTo(gripX, gripY); ctx.lineTo(tipX, tipY); ctx.stroke();
+  ctx.fillStyle='#8a6b45'; ctx.beginPath(); ctx.arc(gripX-dirx*3, gripY+2, 3.5, 0, 6.28); ctx.fill(); // リール
+  ctx.strokeStyle='rgba(74,63,58,.5)'; ctx.lineWidth=1.5;   // 糸（竿先→ウキ）
+  ctx.beginPath(); ctx.moveTo(tipX, tipY); ctx.lineTo(bobX, bobY); ctx.stroke();
+  const t=(nowMs*0.002)%1; ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1.5; ctx.globalAlpha=0.5*(1-t);
+  ctx.beginPath(); ctx.ellipse(bobX, bobY, 4+t*16, 2+t*8, 0,0,6.28); ctx.stroke(); ctx.globalAlpha=1;
+  const b=Math.sin(nowMs*0.006)*2;
+  ctx.fillStyle=C.salmon; ctx.beginPath(); ctx.arc(bobX, bobY+b, 5, 0, 6.28); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(bobX, bobY+b-1, 2, 0, 6.28); ctx.fill();
+  if (fishState==='bite'){ ctx.font='900 22px "Zen Maru Gothic"'; ctx.fillStyle=C.salmon;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('！', bobX, bobY-24-Math.abs(Math.sin(nowMs*0.02))*4); }
+  if (fishState==='reeling'){
+    const w=66, x=bobX-w/2, y=bobY-42;
+    ctx.fillStyle='rgba(255,255,255,.85)'; roundRect(x-3,y-3,w+6,12,6); ctx.fill();
+    ctx.fillStyle='#eadfce'; roundRect(x,y,w,6,3); ctx.fill();
+    ctx.fillStyle=C.salmon; roundRect(x,y,w*Math.max(0,Math.min(1,reelProg/100)),6,3); ctx.fill();
+    ctx.font='900 14px "Zen Maru Gothic"'; ctx.fillStyle=C.salmon; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('連打！', bobX, y-13);
+  }
+}
+
+function update(dt){
+  if (inside){ updateInside(dt); return; }
+  // テンションは時間でゆっくり下がる（乾杯直後は猶予）。maxTension は下げない
+  if (cheerGrace>0) cheerGrace -= dt;
+  else if (tension>0){ tension = Math.max(0, tension - (TDECAY_BASE + tension*TDECAY_SCALE)*dt); updateGauge(); }
+  // ─ プレイヤー入力ベクトル ─
+  let ix=0, iy=0;
+  if (keys['arrowleft']||keys['a']) ix-=1;
+  if (keys['arrowright']||keys['d']) ix+=1;
+  if (keys['arrowup']||keys['w']) iy-=1;
+  if (keys['arrowdown']||keys['s']) iy+=1;
+  ix += padVec.x; iy += padVec.y;
+  const mag = Math.hypot(ix,iy);
+  if (mag>1){ ix/=mag; iy/=mag; }
+  const sp = CONFIG.player.speed;
+  player.vx = ix*sp; player.vy = iy*sp;
+  player.x += player.vx*dt; player.y += player.vy*dt;
+  // 村の外に出ない
+  player.x = Math.max(60, Math.min(W-60, player.x));
+  player.y = Math.max(150, Math.min(H-60, player.y));
+  keepOutOfPond(player);
+  if (ix!==0 || iy!==0) faceDir(player, ix, iy);
+  // 歩いてる時だけ弾む
+  const moving = mag>0.05;
+  player.bob += dt*(moving?11:3);
+
+  // ─ 住人のゆるゆる散歩 ─
+  visitTimer -= dt;
+  if (visitTimer<=0){ rollHouseVisitors(); visitTimer = rand(15, 30); }
+  for (const r of residents){
+    if (r.atHome) continue;             // 家に遊びに来ている子は屋外に出さない
+    if (r.guest){                       // 招かれた子は敷地へ来て、庭でくつろぐ
+      r.stayT -= dt;
+      if (r.stayT<=0){ leaveGuest(r); continue; }   // 滞在時間が過ぎたら去る
+      const dx=r.tx-r.x, dy=r.ty-r.y, d=Math.hypot(dx,dy);
+      if (d>6){ r.x+=dx/d*60*dt; r.y+=dy/d*60*dt; faceDir(r, dx, dy); }
+      else { r.wanderT-=dt; if(r.wanderT<=0){ pickGuestTarget(r); r.wanderT=rand(1.5,3.5); } }
+      r.bob += dt*((d>6)?9:3);
+      // ピョンピョン（連続ジャンプ）
+      if (r.hop>0) r.hop=Math.max(0,r.hop-dt*3);
+      else if (r.bounce>0){ r.hop=1; r.bounce--; }
+      // 庭で落ち着いたら、飾りを褒める／喜ぶリアクション
+      r.reactT -= dt;
+      if (r.reactT<=0 && d<=6){ guestReact(r); r.reactT = rand(3.5,7); }
+      continue;
+    }
+    r.wanderT -= dt;
+    if (r.wanderT<=0){
+      const ang = rand(0,6.28), go = Math.random()<.6;
+      r.dx = go?Math.cos(ang):0; r.dy = go?Math.sin(ang):0;
+      r.wanderT = rand(1.2,3.2);
+      faceDir(r, r.dx, r.dy);
+    }
+    r.x += r.dx*55*dt; r.y += r.dy*55*dt;
+    r.x = Math.max(80, Math.min(W-80, r.x));
+    r.y = Math.max(200, Math.min(H-90, r.y));
+    keepOutOfPond(r);
+    r.bob += dt*((r.dx||r.dy)?9:3);
+    if (r.hop>0) r.hop = Math.max(0, r.hop - dt*3);
+  }
+  if (player.hop>0) player.hop = Math.max(0, player.hop - dt*3);
+
+  // ─ 他ユーザー（補間移動＆ゆれ）─
+  for (const id in peers){ const p=peers[id];
+    if (p.tx!==undefined){ const k=Math.min(1,dt*8);
+      faceDir(p, p.tx-p.x, p.ty-p.y);
+      p.x += (p.tx-p.x)*k; p.y += (p.ty-p.y)*k; }
+    p.bob += dt*7;
+  }
+  if (Net.isLocal) updateBots(dt);
+
+  // ─ 自分の位置を送信（間引き）─
+  moveT -= dt;
+  if (moveT<=0){ Net.move(player.x, player.y, player.facing); moveT = 1/CONFIG.moveHz; }
+
+  // ─ 近くの住人を探す ─
+  nearest = null; let best = CONFIG.cheerRange;
+  for (const r of residents){
+    if (r.atHome) continue;
+    const d = Math.hypot(r.x-player.x, r.y-player.y);
+    if (d<best){ best=d; nearest=r; }
+  }
+  document.getElementById('cheer').classList.toggle('ready', !!nearest);
+  document.getElementById('invite').style.display =
+    (nearest && !nearest.guest && (nearest.affinity||0)>=INVITE_MIN && !decoMode) ? 'block' : 'none';
+  const nearHouse = Math.hypot(player.x-houseDoor.x, player.y-houseDoor.y) < 46;
+  const _db=document.getElementById('doorBtn');
+  _db.style.display = (nearHouse && !decoMode) ? 'block' : 'none';
+  _db.textContent = '🚪 入る';
+  // ─ 釣りの進行 ─
+  if (fishState==='wait' && nowMs>=fishBiteAt){ fishState='bite'; fishBiteEnd=nowMs+1300; vibe(60); }
+  if (fishState==='bite' && nowMs>=fishBiteEnd){ fishState='idle';
+    effects.push({kind:'hint', x:bobX, y:bobY-30, life:1.3, text:'にげられた…'}); }
+  if (fishState==='reeling'){
+    const drain = (NETA[pendingFish].rank==='スーパーレア')?26:20;
+    reelProg -= drain*dt;
+    if (reelProg>=100){ catchFish(pendingFish); fishState='idle'; }
+    else if (reelProg<=0 || nowMs>reelEnd){ fishState='idle'; vibe(120);
+      effects.push({kind:'hint', x:bobX, y:bobY-30, life:1.4, text:'にげられた…'}); }
+  }
+  if (fishState!=='idle' && fishState!=='reeling' && pondE()>2.3) fishState='idle';   // 離れたらやめる
+  const fb=document.getElementById('fishBtn');
+  if ((nearPond() || fishState==='reeling') && !decoMode){
+    fb.style.display='block';
+    fb.classList.toggle('bite', fishState==='bite' || fishState==='reeling');
+    fb.textContent = fishState==='reeling' ? '連打！' : fishState==='bite' ? '！ ひく！' : (fishState==='wait' ? '…' : '🎣 つる');
+  } else fb.style.display='none';
+
+  // ─ エフェクト更新 ─
+  for (let i=effects.length-1;i>=0;i--){
+    const e = effects[i];
+    e.life -= dt;
+    if (e.kind==='spark'){ e.x+=e.vx*dt; e.y+=e.vy*dt; e.vy+=120*dt; }
+    if (e.kind==='piyo'){ e.y -= 22*dt; }
+    if (e.kind==='get'){ e.y -= 30*dt; }
+    if (e.kind==='hint'){ e.y -= 16*dt; }
+    if (e.life<=0) effects.splice(i,1);
+  }
+
+  // ─ アイテム更新（拾う判定）─
+  updateItems(dt);
+
+  // ─ 環境アニメ ─
+  ambientT += dt;
+  updateAmbient(dt);
+
+  // ─ カメラ（やわらかく追従）─
+  const tx = player.x - VW/2, ty = player.y - VH/2;
+  const ease = reduceMotion ? 1 : 0.08;
+  camX += (tx-camX)*ease; camY += (ty-camY)*ease;
+  camX = Math.max(0, Math.min(W-VW, camX));
+  camY = Math.max(0, Math.min(H-VH, camY));
+  if (W<VW) camX = (W-VW)/2;
+  if (H<VH) camY = (H-VH)/2;
+}
+
+// ==========================================================
+//  環境: 漂う寿司/花びらパーティクル
+// ==========================================================
+let ambientT = 0;
+const drifters = [];
+const DRIFT_N = reduceMotion ? 8 : 22;
+for (let i=0;i<DRIFT_N;i++){
+  drifters.push({ x:rand(0,W), y:rand(0,H), s:rand(10,18), r:rand(0,6.28),
+    vr:rand(-.6,.6), sp:rand(8,22), ph:rand(0,6.28),
+    emoji:['🍣','🌸','✨','🍥'][i%4] });
+}
+function updateAmbient(dt){
+  for (const d of drifters){
+    d.y += d.sp*dt; d.x += Math.sin(ambientT+d.ph)*10*dt; d.r += d.vr*dt;
+    if (d.y>H+20){ d.y=-20; d.x=rand(0,W); }
+  }
+}
+
+// ==========================================================
+//  描画ヘルパー
+// ==========================================================
+function cssv(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+const C = { grass:cssv('--grass'), grassDeep:cssv('--grass-deep'), path:cssv('--path'),
+  water:cssv('--water'), salmon:cssv('--salmon'), tamago:cssv('--tamago'),
+  nori:cssv('--nori'), ink:cssv('--ink'), blush:cssv('--blush') };
+
+function shadow(x,y,w){ ctx.fillStyle='rgba(74,63,58,.12)';
+  ctx.beginPath(); ctx.ellipse(x,y,w,w*0.4,0,0,6.28); ctx.fill(); }
+
+// 仮キャラ（寿司をのせた丸い子）
+function drawMascot(c, x, y, s){
+  const p = c.pal;
+  const bob = Math.sin(c.bob)*3;
+  const hop = c.hop>0 ? Math.sin((1-c.hop)*Math.PI)*18 : 0;
+  const yy = y - bob - hop;
+  ctx.save();
+  ctx.translate(x, yy);
+  ctx.scale(c.facing*s, s);
+  // 影は別で描くのでここでは本体のみ
+  // 足
+  ctx.fillStyle=p.body;
+  ctx.beginPath(); ctx.ellipse(-9,26,7,5,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(9,26,7,5,0,0,6.28); ctx.fill();
+  // からだ（丸いおにぎり体）
+  ctx.beginPath();
+  ctx.moveTo(-22,10);
+  ctx.quadraticCurveTo(-24,-20,0,-24);
+  ctx.quadraticCurveTo(24,-20,22,10);
+  ctx.quadraticCurveTo(22,28,0,28);
+  ctx.quadraticCurveTo(-22,28,-22,10);
+  ctx.fill();
+  // おなか
+  ctx.fillStyle=p.belly;
+  ctx.beginPath(); ctx.ellipse(0,8,13,12,0,0,6.28); ctx.fill();
+  // 寿司ネタ（頭のせ）
+  ctx.fillStyle=p.neta;
+  ctx.beginPath(); ctx.ellipse(0,-24,20,9,0,0,6.28); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.25)';
+  ctx.beginPath(); ctx.ellipse(-6,-26,8,3,0,0,6.28); ctx.fill();
+  // 目
+  ctx.fillStyle=C.ink;
+  const eye = c.blink>0 ? 1.2 : 3;
+  ctx.beginPath(); ctx.ellipse(-7,2,2.4,eye,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(7,2,2.4,eye,0,0,6.28); ctx.fill();
+  // ほっぺ
+  ctx.fillStyle='rgba(244,166,160,.55)';
+  ctx.beginPath(); ctx.arc(-12,8,3.5,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.arc(12,8,3.5,0,6.28); ctx.fill();
+  // 口
+  ctx.strokeStyle=C.ink; ctx.lineWidth=1.6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(0,7,3,.2,Math.PI-.2); ctx.stroke();
+  ctx.restore();
+}
+
+// キャラの絵を選ぶ（画像→無ければ仮絵）。residents も peers(bot) も共通で使う
+function pickSprite(c){
+  const set = IMAGES[c.key]; if(!set) return null;
+  const dir = c.dir || 'front';
+  let img;
+  if (dir==='back') img = set.back || set.all || set.front;
+  else if (dir==='front') img = set.front || set.all;
+  else img = set.right || set.all || set.front;
+  if (!(img && img.complete && img.naturalWidth)) return null;
+  const facesRight = (set.faces === 'right');
+  let flip = 1;
+  if (dir==='right') flip = facesRight ? 1 : -1;
+  else if (dir==='left') flip = facesRight ? -1 : 1;
+  return { img, flip };
+}
+function drawCharSprite(c){
+  const s = pickSprite(c);
+  if (s){
+    const bob = Math.sin(c.bob)*3;
+    const hop = c.hop>0 ? Math.sin((1-c.hop)*Math.PI)*18 : 0;
+    const h = 100, w = h*(s.img.naturalWidth/s.img.naturalHeight);
+    ctx.save(); ctx.translate(c.x, c.y - bob - hop); ctx.scale(s.flip,1);
+    ctx.drawImage(s.img, -w/2, -h+30, w, h); ctx.restore();
+  } else {
+    drawMascot(c, c.x, c.y, 1);
+  }
+}
+function drawChar(c){
+  shadow(c.x, c.y+26, 20);
+  drawCharSprite(c);
+  // 自分の吹き出し（チャット投稿）
+  if (c.bubbleUntil && nowMs < c.bubbleUntil && c.bubbleText) drawBubble(c.x, c.y-58, c.bubbleText);
+  // 好感度ハート（近くの住人の頭上）
+  if (c===nearest && c.affinity!==undefined && !c.guest){
+    const lv = Math.round(c.affinity/20);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='900 13px "Zen Maru Gothic"';
+    for(let i=0;i<5;i++){ ctx.fillStyle = i<lv ? C.salmon : 'rgba(74,63,58,.16)'; ctx.fillText('♥', c.x-26+i*13, c.y-82); }
+    if (c.affinity>=INVITE_MIN){ ctx.font='15px serif'; ctx.fillText('🏠', c.x, c.y-99); }
+  }
+  // 近くの子には吹き出し（リアクション吹き出し中は出さない）
+  if (c===nearest && !(c.bubbleUntil && nowMs < c.bubbleUntil)){
+    ctx.save();
+    ctx.translate(c.x, c.y-64);
+    ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(74,63,58,.15)'; ctx.lineWidth=2;
+    roundRect(-30,-18,60,26,13); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-5,8); ctx.lineTo(5,8); ctx.lineTo(0,15); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=C.salmon; ctx.font='900 16px "Zen Maru Gothic"'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🍣乾杯',0,-4);
+    ctx.restore();
+  }
+}
+function roundRect(x,y,w,h,r){ ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+// ─ マイホーム（あなたの区画）の描画 ─
+function fenceLine(x1,y1,x2,y2){
+  ctx.strokeStyle='#E3BE86'; ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const len=Math.hypot(x2-x1,y2-y1), n=Math.max(2,Math.round(len/26));
+  for(let i=0;i<=n;i++){ const t=i/n, px=x1+(x2-x1)*t, py=y1+(y2-y1)*t;
+    ctx.fillStyle='#EAD0A5'; ctx.fillRect(px-2.5,py-8,5,15);
+    ctx.beginPath(); ctx.arc(px,py-8,2.6,0,6.28); ctx.fill(); }
+}
+function drawCottage(x,y,cnt){
+  shadow(x,y+20,46);
+  ctx.fillStyle='#FBEFD9'; ctx.fillRect(x-42,y-30,84,52);            // 壁
+  ctx.fillStyle=C.salmon;                                           // 屋根
+  ctx.beginPath(); ctx.moveTo(x-52,y-30); ctx.lineTo(x,y-66); ctx.lineTo(x+52,y-30); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.2)';
+  ctx.beginPath(); ctx.moveTo(x-52,y-30); ctx.lineTo(x,y-66); ctx.lineTo(x-20,y-30); ctx.closePath(); ctx.fill();
+  const glow = cnt>=10;                                             // 窓（灯り）
+  ctx.fillStyle= glow ? '#FFE9A8' : '#DCE9E4';
+  ctx.fillRect(x-34,y-20,18,16); ctx.fillRect(x+16,y-20,18,16);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+  ctx.strokeRect(x-34,y-20,18,16); ctx.strokeRect(x+16,y-20,18,16);
+  ctx.fillStyle='#C69B6B'; ctx.fillRect(x-11,y-8,22,30);            // ドア
+  ctx.fillStyle=C.tamago; ctx.beginPath(); ctx.arc(x+6,y+8,2,0,6.28); ctx.fill();
+  ctx.fillStyle='#C69B6B'; ctx.fillRect(x+22,y-56,10,16);           // 煙突
+  if(cnt>=6 && !reduceMotion){                                      // 煙
+    for(let i=0;i<3;i++){ const t=(ambientT*0.55+i*0.5)%1;
+      ctx.globalAlpha=0.55*(1-t); ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(x+27+Math.sin((t+i)*3)*4, y-58-t*30, 4+t*4,0,6.28); ctx.fill(); }
+    ctx.globalAlpha=1;
+  }
+  if(cnt>=3){ ctx.fillStyle=C.blush; roundRect(x-16,y+21,32,8,4); ctx.fill(); } // 玄関マット
+}
+function drawNameplate(h,cnt){
+  const x=h.x1+2, y=h.cy-58;
+  ctx.fillStyle='#C69B6B'; ctx.fillRect(x-3,y,6,46);
+  ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(74,63,58,.15)'; ctx.lineWidth=2;
+  roundRect(x-54,y-26,108,32,10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=C.ink; ctx.font='900 12px "Zen Maru Gothic"'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🏠 '+h.name, x, y-15);
+  const hearts=Math.min(5,Math.round(cnt/10*5));
+  let s=''; for(let i=0;i<5;i++) s+= i<hearts?'♥':'·';
+  ctx.fillStyle=C.salmon; ctx.font='12px serif';
+  ctx.fillText(s, x, y-1);
+}
+function drawHome(){
+  const cnt = placed.reduce((a,p)=> a + (inTerritory(p)?1:0), 0);
+  // 所有ロットの地面
+  ctx.fillStyle='rgba(245,208,107,.16)';
+  owned.forEach(k=>{ const [c,r]=k.split(',').map(Number); const R=cellRect(c,r);
+    ctx.fillRect(R.x0,R.y0,R.x1-R.x0,R.y1-R.y0); });
+  // 外周だけ柵を描く（隣も所有なら描かない＝つながって見える）
+  owned.forEach(k=>{ const [c,r]=k.split(',').map(Number); const R=cellRect(c,r);
+    if(!owned.has(cellKey(c,r-1))) fenceLine(R.x0,R.y0,R.x1,R.y0);
+    if(!owned.has(cellKey(c,r+1))) fenceLine(R.x0,R.y1,R.x1,R.y1);
+    if(!owned.has(cellKey(c-1,r))) fenceLine(R.x0,R.y0,R.x0,R.y1);
+    if(!owned.has(cellKey(c+1,r))) fenceLine(R.x1,R.y0,R.x1,R.y1);
+  });
+  // お家＆表札（最初のロット）
+  const S=cellRect(START[0],START[1]);
+  drawCottage((S.x0+S.x1)/2, S.y0+58, cnt);
+  drawNameplate({ x1:S.x1, cy:(S.y0+S.y1)/2, name:'マーティーのおうち' }, cnt);
+  // 空き地マーカー（飾りつけモード中のみ）
+  if(decoMode){
+    for(let r=0;r<LOTROWS;r++) for(let c=0;c<LOTCOLS;c++){
+      if(!isExpandable(c,r)) continue;
+      const R=cellRect(c,r), cx=(R.x0+R.x1)/2, cy=(R.y0+R.y1)/2, hot=(brush==='expand');
+      ctx.setLineDash([7,7]); ctx.lineWidth=3;
+      ctx.strokeStyle = hot ? 'rgba(244,166,160,.95)' : 'rgba(214,155,90,.45)';
+      ctx.strokeRect(R.x0+7,R.y0+7,(R.x1-R.x0)-14,(R.y1-R.y0)-14); ctx.setLineDash([]);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      if(hot){
+        const cost=expandCost(), ok=rice>=cost;
+        ctx.fillStyle= ok ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.72)';
+        roundRect(cx-62,cy-18,124,36,13); ctx.fill();
+        ctx.strokeStyle='rgba(74,63,58,.15)'; ctx.lineWidth=2; roundRect(cx-62,cy-18,124,36,13); ctx.stroke();
+        ctx.fillStyle= ok ? C.salmon : '#b6a79f'; ctx.font='900 14px "Zen Maru Gothic"';
+        ctx.fillText(`＋ ひろげる 🍚${cost}`, cx, cy);
+      } else {
+        ctx.fillStyle='rgba(74,63,58,.4)'; ctx.font='900 26px "Zen Maru Gothic"';
+        ctx.fillText('＋', cx, cy);
+      }
+    }
+  }
+}
+
+// ─ 家具（大きめの飾り）の形を描く ─
+function drawShape(shape, x, y){
+  const sway = Math.sin(ambientT*0.9 + x*0.01)*(reduceMotion?0:1);
+  switch(shape){
+    case 'flowerbed': {
+      shadow(x,y+4,26);
+      ctx.fillStyle='#B98A5B'; roundRect(x-24,y-6,48,12,6); ctx.fill();
+      const cols=[C.salmon,C.tamago,C.blush,C.water];
+      for(let i=0;i<5;i++){ const fx=x-18+i*9, fy=y-6+(i%2?-3:0);
+        ctx.save(); ctx.translate(fx,fy+sway*1.2);
+        ctx.strokeStyle=C.grassDeep; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-10); ctx.stroke();
+        ctx.fillStyle=cols[i%4];
+        for(let k=0;k<5;k++){ ctx.save(); ctx.translate(0,-12); ctx.rotate(k*1.256);
+          ctx.beginPath(); ctx.ellipse(0,-3,2.2,3.6,0,0,6.28); ctx.fill(); ctx.restore(); }
+        ctx.fillStyle=C.tamago; ctx.beginPath(); ctx.arc(0,-12,1.8,0,6.28); ctx.fill();
+        ctx.restore(); }
+      break; }
+    case 'lantern': {
+      shadow(x,y+2,12);
+      ctx.strokeStyle='#8a6b45'; ctx.lineWidth=4; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y-46); ctx.stroke();
+      ctx.strokeStyle='rgba(74,63,58,.3)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x,y-46); ctx.lineTo(x+sway*3,y-34); ctx.stroke();
+      ctx.save(); ctx.translate(x+sway*3,y-22);
+      ctx.fillStyle=C.salmon; ctx.beginPath(); ctx.ellipse(0,0,14,17,0,0,6.28); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(-12,-6); ctx.lineTo(12,-6); ctx.moveTo(-13,4); ctx.lineTo(13,4); ctx.stroke();
+      ctx.restore(); break; }
+    case 'bench': {
+      shadow(x,y+6,34);
+      ctx.fillStyle='#C69B6B'; ctx.fillRect(x-30,y-8,60,10); ctx.fillRect(x-30,y-24,60,8);
+      ctx.fillRect(x-26,y,6,12); ctx.fillRect(x+20,y,6,12); break; }
+    case 'barrel': {
+      shadow(x,y+4,20);
+      ctx.fillStyle='#E3BE86'; roundRect(x-16,y-30,32,34,8); ctx.fill();
+      ctx.fillStyle='#C99B63'; ctx.fillRect(x-16,y-24,32,4); ctx.fillRect(x-16,y-9,32,4);
+      ctx.fillStyle=C.nori; ctx.beginPath(); ctx.ellipse(x,y-30,16,6,0,0,6.28); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='900 11px "Zen Maru Gothic"'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('酒',x,y-14); break; }
+    case 'tree': {
+      shadow(x,y+4,30);
+      ctx.fillStyle='#C69B6B'; ctx.fillRect(x-5,y-34,10,36);
+      ctx.save(); ctx.translate(x,y-42); ctx.rotate(sway*0.02);
+      ctx.fillStyle=C.grassDeep; ctx.beginPath(); ctx.arc(0,0,34,0,6.28); ctx.fill();
+      ctx.fillStyle='#C9E0BC'; ctx.beginPath(); ctx.arc(-10,-6,20,0,6.28); ctx.fill();
+      ctx.restore(); break; }
+    case 'torii': {
+      shadow(x,y+4,30);
+      ctx.fillStyle=C.salmon;
+      ctx.fillRect(x-26,y-44,7,46); ctx.fillRect(x+19,y-44,7,46);
+      ctx.fillRect(x-34,y-53,68,9);
+      ctx.fillStyle='#E48C86'; ctx.fillRect(x-30,y-40,60,6); break; }
+  }
+}
+
+// ─ 飾った物の描画（家具は形、ネタは白米＋絵文字）─
+function drawPlaced(p){
+  const n = NETA[p.n];
+  const im = n._img;
+  if (im && im.complete && im.naturalWidth){
+    const h = n.ph || 46, w = h*(im.naturalWidth/im.naturalHeight);
+    shadow(p.x, p.y+4, w*0.42);
+    ctx.drawImage(im, p.x-w/2, p.y-h+4, w, h);
+  } else if (n.shape){
+    drawShape(n.shape, p.x, p.y);
+  } else {
+    shadow(p.x, p.y+5, 13);
+    ctx.fillStyle='rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.ellipse(p.x, p.y+3, 16, 8, 0,0,6.28); ctx.fill();
+    ctx.fillStyle='#FFF7EA';
+    ctx.beginPath(); ctx.ellipse(p.x, p.y, 12, 7, 0,0,6.28); ctx.fill();
+    ctx.font='21px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(n.emoji, p.x, p.y-7);
+  }
+  // 「とる」選択中は回収リング
+  if (decoMode && brush==='pickup'){
+    ctx.strokeStyle='rgba(244,166,160,.85)'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.arc(p.x, (n.shape||n._img) ? p.y-18 : p.y-4, (n.shape||n._img)?26:21, 0, 6.28); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// ─ アイテム（寿司ネタ）の描画 ─
+function drawItem(it){
+  const n = NETA[it.n];
+  const bob = Math.sin(it.bob)*3;
+  const locked = tension < n.need;
+  shadow(it.x, it.y+6, 13);
+  ctx.globalAlpha = locked ? 0.75 : 1;
+  const im = n._img;
+  if (im && im.complete && im.naturalWidth){
+    const h=36, w=h*(im.naturalWidth/im.naturalHeight);
+    ctx.drawImage(im, it.x-w/2, it.y-h+4-bob, w, h);
+  } else {
+    ctx.fillStyle='#FFF7EA';
+    ctx.beginPath(); ctx.ellipse(it.x, it.y+2-bob, 13, 8, 0,0,6.28); ctx.fill();
+    ctx.font='22px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(n.emoji, it.x, it.y-6-bob);
+  }
+  if (locked){ ctx.font='12px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🔒', it.x+11, it.y+4-bob); }
+  else if (n.need>=55){ ctx.globalAlpha=.5+.5*Math.sin(ambientT*4+it.bob);
+    ctx.font='12px serif'; ctx.fillText('✨', it.x+12, it.y-16-bob); }
+  ctx.globalAlpha=1;
+}
+
+// ─ 小物の描画 ─
+function drawProp(o){
+  const sway = o.sway!==undefined ? Math.sin(ambientT*0.9+o.sway)*(reduceMotion?0:1) : 0;
+  switch(o.type){
+    case 'tree': {
+      shadow(o.x, o.y+6, 34*o.scale);
+      ctx.fillStyle='#C69B6B';
+      ctx.fillRect(o.x-6, o.y-30, 12, 40);
+      ctx.save(); ctx.translate(o.x, o.y-40); ctx.rotate(sway*0.02);
+      ctx.fillStyle=C.grassDeep;
+      ctx.beginPath(); ctx.arc(0,0,42*o.scale,0,6.28); ctx.fill();
+      ctx.fillStyle='#C9E0BC';
+      ctx.beginPath(); ctx.arc(-12,-8,26*o.scale,0,6.28); ctx.fill();
+      ctx.restore(); break;
+    }
+    case 'arch': {
+      ctx.fillStyle=C.salmon;
+      ctx.fillRect(o.x-90,o.y-70,14,80); ctx.fillRect(o.x+76,o.y-70,14,80);
+      ctx.fillRect(o.x-100,o.y-78,200,18);
+      ctx.fillStyle='#fff'; ctx.font='900 20px "Zen Maru Gothic"'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('すしむら', o.x, o.y-68); break;
+    }
+    case 'stall': {
+      shadow(o.x, o.y+18, 46);
+      ctx.fillStyle='#C69B6B'; ctx.fillRect(o.x-46,o.y-6,92,26);
+      ctx.fillStyle='#EFE6D2'; ctx.fillRect(o.x-46,o.y-10,92,8);
+      // のれん
+      ctx.fillStyle=cssv(o.c);
+      ctx.fillRect(o.x-50,o.y-56,100,34);
+      ctx.fillStyle='rgba(255,255,255,.85)';
+      for(let i=-40;i<50;i+=20){ ctx.fillRect(o.x+i,o.y-56,3,34); }
+      ctx.fillStyle='#fff'; ctx.font='20px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(o.label, o.x, o.y-38);
+      // 屋根
+      ctx.fillStyle=C.nori;
+      ctx.beginPath(); ctx.moveTo(o.x-58,o.y-56); ctx.lineTo(o.x,o.y-78); ctx.lineTo(o.x+58,o.y-56); ctx.closePath(); ctx.fill();
+      break;
+    }
+    case 'lantern': {
+      ctx.strokeStyle='rgba(74,63,58,.3)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(o.x,o.y-70); ctx.lineTo(o.x+sway*3,o.y-40); ctx.stroke();
+      ctx.save(); ctx.translate(o.x+sway*3,o.y-26); 
+      ctx.fillStyle=C.salmon; ctx.beginPath(); ctx.ellipse(0,0,15,18,0,0,6.28); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(-13,-6); ctx.lineTo(13,-6); ctx.moveTo(-14,4); ctx.lineTo(14,4); ctx.stroke();
+      ctx.restore(); break;
+    }
+    case 'bench': {
+      shadow(o.x, o.y+8, 34);
+      ctx.fillStyle='#C69B6B';
+      ctx.fillRect(o.x-30,o.y-8,60,10); ctx.fillRect(o.x-30,o.y-24,60,8);
+      ctx.fillRect(o.x-26,o.y,6,12); ctx.fillRect(o.x+20,o.y,6,12); break;
+    }
+    case 'flower': {
+      ctx.save(); ctx.translate(o.x, o.y+sway*1.5); ctx.scale(o.s,o.s);
+      ctx.strokeStyle=C.grassDeep; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-12); ctx.stroke();
+      ctx.fillStyle=cssv(o.c);
+      for(let i=0;i<5;i++){ ctx.save(); ctx.translate(0,-14); ctx.rotate(i*1.256);
+        ctx.beginPath(); ctx.ellipse(0,-4,2.6,4.5,0,0,6.28); ctx.fill(); ctx.restore(); }
+      ctx.fillStyle=C.tamago; ctx.beginPath(); ctx.arc(0,-14,2.4,0,6.28); ctx.fill();
+      ctx.restore(); break;
+    }
+  }
+}
+
+// ==========================================================
+//  描画ループ
+// ==========================================================
+function drawGround(){
+  // 草地グラデ
+  ctx.fillStyle = C.grass; ctx.fillRect(0,0,VW,VH);
+  // やわらかい斑点
+  ctx.fillStyle='rgba(187,214,174,.5)';
+  const step=90;
+  const ox = -(camX%step), oy=-(camY%step);
+  for(let gx=ox; gx<VW; gx+=step) for(let gy=oy; gy<VH; gy+=step){
+    ctx.beginPath(); ctx.arc(gx+((gy/step)&1?45:0), gy, 20, 0, 6.28); ctx.fill();
+  }
+  // 小道
+  ctx.strokeStyle=C.path; ctx.lineWidth=54; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath();
+  pathPts.forEach((p,i)=>{ const sx=p[0]-camX, sy=p[1]-camY; i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy); });
+  ctx.stroke();
+  // 池
+  const px=pond.x-camX, py=pond.y-camY;
+  ctx.fillStyle=C.water;
+  ctx.beginPath(); ctx.ellipse(px,py,pond.rx,pond.ry,0,0,6.28); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=2;
+  for(let i=0;i<3;i++){ const t=(ambientT*0.4+i*.4)%1;
+    ctx.globalAlpha=0.5*(1-t);
+    ctx.beginPath(); ctx.ellipse(px,py,pond.rx*t,pond.ry*t,0,0,6.28); ctx.stroke(); }
+  ctx.globalAlpha=1;
+}
+
+function render(){
+  nowMs = performance.now();
+  if (inside){ renderRoom(); return; }
+  drawGround();
+  ctx.save();
+  ctx.translate(-camX,-camY);
+  drawHome();                        // あなたの区画（地面・柵・お家）を先に
+  // y ソートで奥行き（小物＋キャラをまとめて）
+  const drawList = [...props, ...items, ...placed, player, ...residents.filter(r=>!r.atHome), ...Object.values(peers)];
+  drawList.sort((a,b)=>a.y-b.y);
+  for (const it of drawList){
+    if (it.type) drawProp(it);
+    else if (it.isItem) drawItem(it);
+    else if (it.isPlaced) drawPlaced(it);
+    else if (it.isPeer) drawPeer(it);
+    else drawChar(it);
+  }
+  drawFishing();
+  // 漂うもの
+  ctx.font='18px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for (const d of drifters){
+    ctx.save(); ctx.translate(d.x,d.y); ctx.rotate(d.r);
+    ctx.globalAlpha=.55; ctx.font=`${d.s}px serif`;
+    ctx.fillText(d.emoji,0,0); ctx.restore();
+  }
+  ctx.globalAlpha=1;
+  // 乾杯エフェクト
+  for (const e of effects){
+    if (e.kind==='spark'){ ctx.globalAlpha=Math.max(0,e.life);
+      ctx.font='20px serif'; ctx.fillText(e.emoji,e.x,e.y); }
+    if (e.kind==='piyo'){ ctx.globalAlpha=Math.max(0,e.life);
+      ctx.font='26px serif'; ctx.fillText('💛',e.x,e.y); }
+    if (e.kind==='get'){ ctx.globalAlpha=Math.max(0,e.life);
+      ctx.font='26px serif'; ctx.fillText(e.emoji,e.x,e.y); }
+    if (e.kind==='hint'){ ctx.globalAlpha=Math.max(0,e.life*0.9);
+      ctx.fillStyle=C.ink; ctx.font='900 14px "Zen Maru Gothic"';
+      ctx.fillText(e.text,e.x,e.y); }
+  }
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+
+// ==========================================================
+//  まばたき（たまに）
+// ==========================================================
+setInterval(()=>{ [player,...residents].forEach(c=>{
+  if (Math.random()<.5){ c.blink=1; setTimeout(()=>c.blink=0,120); }
+}); }, 2600);
+
+// ==========================================================
+//  メインループ（共有 rAF 1本）
+// ==========================================================
+let last = performance.now(), running=false;
+function loop(now){
+  const dt = Math.min((now-last)/1000, 0.05); last = now;
+  if (running) update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ─ スタート ─
+document.getElementById('start').addEventListener('click', ()=>{
+  const nm = document.getElementById('nameInput').value.trim();
+  if (nm) myName = nm.slice(0,12);
+  const intro = document.getElementById('intro');
+  intro.style.opacity='0'; setTimeout(()=>intro.style.display='none',600);
+  running = true; last = performance.now();
+  initNet();
+  startBGM();
+});
+
+// ─ BGM（ループ＋ミュート切替。設定は保存）─
+const bgm = document.getElementById('bgm'), bgmBtn = document.getElementById('bgmBtn');
+let bgmMuted = false;
+try{ bgmMuted = localStorage.getItem('ssp_bgm_muted')==='1'; }catch(e){}
+bgm.volume = 0.35;
+function paintBgmBtn(){ bgmBtn.textContent = bgmMuted ? '🔇' : '🔊'; }
+function startBGM(){ if(!bgmMuted){ bgm.play().catch(()=>{}); } }
+paintBgmBtn();
+bgmBtn.addEventListener('click', ()=>{
+  bgmMuted = !bgmMuted;
+  try{ localStorage.setItem('ssp_bgm_muted', bgmMuted?'1':'0'); }catch(e){}
+  if (bgmMuted){ bgm.pause(); } else { bgm.play().catch(()=>{}); }
+  paintBgmBtn();
+});
+updateGauge();
+</script>
+</body>
+</html>

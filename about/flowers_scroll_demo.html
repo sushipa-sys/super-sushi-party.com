@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふわふわ漂う花 + スクロール連動 demo</title>
+<style>
+  :root{ --bg:#FBFAF7; --ink:#1a1712; }
+  @media (prefers-color-scheme: dark){ :root{ --bg:#141210; --ink:#f4efe6; } }
+  *{ margin:0; box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--ink);
+        font-family:"Zen Maru Gothic",system-ui,sans-serif; }
+
+  .flower-field{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+
+  /* ▼ 3層構造：役割を分けて transform を衝突させない ▼
+     .parallax … スクロール連動（JSが毎フレームtransformを更新）
+     .drift    … アイドルの横揺れ（CSSアニメ）
+     .bob      … アイドルの上下＋回転（CSSアニメ・別周期） */
+  .parallax{ position:absolute; will-change:transform; }
+  .drift{
+    will-change:transform;
+    animation: swayX var(--dx,8s) ease-in-out infinite alternate;
+    animation-delay: var(--delay,0s);
+  }
+  .bob{
+    will-change:transform;
+    animation: bobY var(--dy,6s) ease-in-out infinite alternate;
+    animation-delay: var(--delay2,0s);
+  }
+  @keyframes swayX{ from{ transform:translateX(calc(var(--amp,20px)*-1)); }
+                    to  { transform:translateX(var(--amp,20px)); } }
+  @keyframes bobY { from{ transform:translateY(calc(var(--bobamp,16px)*-1)) rotate(var(--rot,-8deg)); }
+                    to  { transform:translateY(var(--bobamp,16px)) rotate(var(--rot,8deg)); } }
+
+  .flower{ display:block; width:var(--size,48px); height:auto; opacity:var(--op,.85); }
+
+  @media (prefers-reduced-motion: reduce){
+    .drift,.bob{ animation:none !important; }   /* JS側も後述で止める */
+  }
+
+  /* --- スクロール確認用のダミー本文 --- */
+  .content{ position:relative; z-index:1; }
+  .panel{ min-height:100vh; display:grid; place-items:center; text-align:center; padding:0 8vw; }
+  .panel h2{ font-weight:900; font-size:clamp(22px,4.5vw,44px); line-height:1.6; }
+  .panel small{ display:block; margin-top:1em; opacity:.5; font-weight:500; }
+</style>
+</head>
+<body>
+
+<div class="flower-field" id="field"></div>
+
+<div class="content">
+  <section class="panel"><div><h2>スクロールしてみてください</h2><small>花が速度差で流れ、勢いに反応してかしぎます</small></div></section>
+  <section class="panel"><div><h2>ふわふわ × パララックス</h2><small>①奥行き ②突風リアクション</small></div></section>
+  <section class="panel"><div><h2>止めると、ゆっくり戻る</h2></div></section>
+  <section class="panel"><div><h2>おわり</h2></div></section>
+</div>
+
+<template id="tpl">
+  <div class="parallax">
+    <div class="drift">
+      <div class="bob">
+        <svg class="flower" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g fill="var(--petal,#ffb3c1)">
+            <ellipse cx="50" cy="24" rx="15" ry="22"/>
+            <ellipse cx="50" cy="76" rx="15" ry="22"/>
+            <ellipse cx="24" cy="50" rx="22" ry="15"/>
+            <ellipse cx="76" cy="50" rx="22" ry="15"/>
+          </g>
+          <circle cx="50" cy="50" r="14" fill="var(--core,#ffd23f)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const field  = document.getElementById('field');
+  const tpl     = document.getElementById('tpl');
+  const rand   = (a,b)=> a + Math.random()*(b-a);
+  const pick   = arr => arr[Math.floor(Math.random()*arr.length)];
+  const palettes = [['#ffb3c1','#ffd23f'],['#a8e6cf','#ff8b94'],['#ffd6a5','#ff5d73'],['#c3b1e1','#ffd23f']];
+
+  const flowers = [];
+  const COUNT = window.innerWidth < 640 ? 8 : 14;   // モバイルは減らす
+
+  for(let i=0;i<COUNT;i++){
+    const node  = tpl.content.cloneNode(true);
+    const px    = node.querySelector('.parallax');
+    const drift = node.querySelector('.drift');
+    const bob   = node.querySelector('.bob');
+    const fl    = node.querySelector('.flower');
+    const [petal,core] = pick(palettes);
+
+    px.style.left = rand(-2,98)+'vw';
+    px.style.top  = rand(0,180)+'vh';                 // 画面より下にも置いてスクロールで入ってくる
+
+    // アイドルの揺れ（横と上下で別周期）
+    drift.style.setProperty('--dx',   rand(6,12).toFixed(2)+'s');
+    drift.style.setProperty('--amp',  rand(12,40).toFixed(0)+'px');
+    drift.style.setProperty('--delay',(-rand(0,8)).toFixed(2)+'s');
+    bob.style.setProperty('--dy',     rand(4,9).toFixed(2)+'s');
+    bob.style.setProperty('--bobamp', rand(10,28).toFixed(0)+'px');
+    bob.style.setProperty('--rot',    rand(5,14).toFixed(0)+'deg');
+    bob.style.setProperty('--delay2',(-rand(0,6)).toFixed(2)+'s');
+
+    fl.style.setProperty('--size', rand(28,72).toFixed(0)+'px');
+    fl.style.setProperty('--op',   rand(.55,.95).toFixed(2));
+    fl.style.setProperty('--petal',petal);
+    fl.style.setProperty('--core', core);
+
+    field.appendChild(node);
+    // スクロール連動用のパラメータを花ごとに持たせる
+    flowers.push({
+      el: px,
+      speed: rand(-0.12, 0.42),   // ①パララックス速度（±で奥/手前・逆走）
+      gust:  rand(0.4, 1.4)       // ②突風リアクションの効き
+    });
+  }
+
+  if(reduce) return;              // 動きが苦手な人はスクロール演出も止める
+
+  // --- rAFループ：スクロール量と「速度」を毎フレーム算出して transform に反映 ---
+  let lastY = window.scrollY, smoothVel = 0;
+  const clamp = (v,a,b)=> Math.max(a,Math.min(b,v));
+
+  function frame(){
+    const y = window.scrollY;
+    const vel = y - lastY; lastY = y;
+    smoothVel += (vel - smoothVel) * 0.12;        // 速度をなめらかに（止めると0へ戻る＝ゆっくり戻る動き）
+    const v = clamp(smoothVel, -60, 60);
+
+    for(const f of flowers){
+      const ty  = y * f.speed;                    // ①パララックス
+      const rot = v * f.gust * 0.5;               // ②速度→かしぎ
+      const tx  = v * f.gust * 0.4;               // ②速度→横流れ
+      f.el.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotate(${rot}deg)`;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

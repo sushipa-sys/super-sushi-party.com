@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">    
+<title>Super Sushi Party（スーパースシパーティー） | クリエイティブなアニメーション制作ユニット</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css?0722d">
+<link rel="shortcut icon" href="../favicon.ico">
+    
+<!-- OGP -->
+<meta property="og:title" content="Super Sushi Party | クリエイティブなアニメーション制作ユニット" />
+<meta property="og:description" content="個性的なビジュアルと独自のストーリーテリングで魅せるアニメーション制作ユニット「Super Sushi Party」の公式サイト。作品紹介、プロフィール、最新情報をお届けします。" />
+<meta property="og:url" content="https://super-sushi-party.com" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://super-sushi-party.com/image/ogp_img_sushi.jpg" />
+<meta property="og:site_name" content="Super Sushi Party Official Website" />
+<meta property="og:locale" content="ja_JP" />
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Super Sushi Party | クリエイティブなアニメーション制作ユニット" />
+<meta name="twitter:description" content="個性的なビジュアルと独自のストーリーテリングで魅せるアニメーション制作ユニット「Super Sushi Party」の公式サイト。作品紹介、プロフィール、最新情報をお届けします。" />
+<meta name="twitter:image" content="https://super-sushi-party.com/image/ogp_img_sushi.jpg" />
+<meta name="description" content="個性的なビジュアルと独自のストーリーテリングで魅せるアニメーション制作ユニット「Super Sushi Party」の公式サイト。作品紹介、プロフィール、最新情報をお届けします。" />
+<meta name="keywords" content="Super Sushi Party, スーパースシパーティー, アニメーション, 制作ユニット, クリエイティブ, アニメ" />    
+    
+    
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5S5HNEFHS9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5S5HNEFHS9');
+</script>
+</head>
+<body>
+<header>
+  <a href="#" class="logo"><img src="../image/logo.png" width="90px"></a>
+  <nav>
+    <ul>
+      <li><a href="#WORK">WORK</a></li>
+      <li><a href="#ABOUT">ABOUT</a></li>
+        <li><a href="./information.html">INFORMATION</a></li>
+      <li><a href="./archive.html">ARCHIVE</a></li>
+      <li><a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">SHOP</a></li>
+      <li><a href="#CONTACT">CONTACT</a></li>
+    </ul>
+  </nav>
+  <div class="header-right">
+    <label class="dark-mode-toggle">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="dark-mode-slider"></span>
+    </label>
+    <button class="mobile-menu-btn" id="mobileMenuOpen">☰</button>
+  </div>
+</header>
+
+<!-- モバイルメニューは<header>の外かつ前に配置 -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-header">
+    <button class="close-menu" id="mobileMenuClose">✕</button>
+  </div>
+  <ul>
+    <li><a href="#WORK">WORK</a></li>
+    <li><a href="#ABOUT">ABOUT</a></li>
+      <li><a href="./information.html">INFORMATION</a></li>
+    <li><a href="./archive.html">ARCHIVE</a></li>
+    <li><a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">SHOP</a></li>
+    <li><a href="#CONTACT">CONTACT</a></li>
+  </ul>
+  <div class="mobile-menu-footer">
+    <label class="dark-mode-toggle">
+      <input type="checkbox" id="darkModeToggleMobile">
+      <span class="dark-mode-slider"></span>
+    </label>
+  </div>
+</div>
+<section class="hero-section">
+  <!-- 動画グリッド - videos.json からランダムに YouTube 動画を表示 -->
+  <div class="video-grid" data-grid-size="9" id="heroVideoGrid">
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+    <div class="video-item"></div>
+  </div>
+  
+  <!-- 暗めのマスクオーバーレイ -->
+  <div class="hero-mask"></div>
+
+  <!-- ロゴオーバーレイ -->
+  <div class="hero-content">
+    <h1 class="logo-main"> <img src="../image/ssp_logo.png" alt="スーパースシパーティー"> </h1>
+  </div>
+</section>
+
+<!-- ショップバナー -->
+<section class="shop-banner-section">
+  <a href="https://shop.super-sushi-party.com/" target="_blank" rel="noopener">
+    <img src="../image/img_shop_bnr.jpg" alt="SUPER SUSHI PARTY ONLINE SHOP">
+  </a>
+</section>
+
+<section class="section-intro">
+  <div class="parallax-container" id="INFORMATION">
+    <h2 class="parallax-title">INFORMATION</h2>
+  </div>
+  <div class="intro-content">
+    <h3>イベント情報</h3>
+    <!--<div class="intro-content">
+    <p>2025.9.3（水）〜 9.14（日）に 「NICE ZINE ! 展」に参加いたします！<br>
+        横浜の<a href="https://hfg-art.com/exhibition/nice-zine-%e5%b1%95/" target="_blank">FEI ART MUSEUM YOKOHAMA</a>にてお待ちしてます！入場無料なので気軽にお越しください！<br>※月曜日は休廊日になります。</p>
+  </div>
+    <div class="info-container">
+      <div class="info-item">
+        <img src="../image/info_01_0903.jpg" alt="イベント情報１">
+      </div>
+      <div class="info-item">
+        <img src="../image/info_02_0903.jpg" alt="イベント情報２">
+      </div>
+      <div class="info-item" style="margin: 20px 0;">
+        <video src="../image/parapara.mp4" loop autoplay muted ></video>
+      </div>
+    </div>-->
+    
+    <!-- 新しいニュースグリッド -->
+    <div class="news-grid">
+      <div class="news-card" data-news-id="12">
+        <div class="news-image">
+          <img src="../image/info_img_suma_bnr_03.jpg" alt="SUMMER SONIC 2026「SONIC CANVAS」ライブペイント">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.08.19</p>
+          <h4 class="news-title">SUMMER SONIC 2026「SONIC CANVAS」ライブペイントに参加しました🫟</h4>
+          <p class="news-caption">幕張メッセのロビーで行っていたあべ・松本のライブペイントが無事に完成しました！応援ありがとうございました🔥</p>
+        </div>
+        <div class="card-modal-description" hidden>
+          <p>SUMMER SONIC 2026開催中の3日間、あべと松本がそれぞれ幕張メッセのロビーにてライブペイントを行っておりましたが、ペイントは無事に完成しました！🔥</p>
+          <img src="../image/info_img_suma_bnr_04.jpg" alt="SUMMER SONIC 2026「SONIC CANVAS」ライブペイント完成作品" style="display:block;width:100%;max-width:400px;margin:14px auto;border-radius:8px;">
+          <p style="font-size: small;">※上：あべ、下：松本</p>
+          <p>制作中に声をかけてくださったみなさま、足を止めて写真を撮ってくださったみなさま、とても励みになりました。ありがとうございました！</p>
+          <p>とってもアツい夏の思い出になりました♪☀️お誘いいただいたかまちかやさん、助っ人のみなさま、ありがとうございました！！</p>
+          <p>まだまだ夏を燃やしていきましょ〜🔥</p>
+        </div>
+      </div>
+
+      <div class="news-card" data-news-id="11">
+        <div class="news-image">
+          <img src="../image/info_img_suma_bnr_02.jpg" alt="SUMMER SONIC 2026 ライブペインティング展示">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.08.12</p>
+          <h4 class="news-title">SUMMER SONIC 2026 ライブペインティング展示に参加いたします</h4>
+          <p class="news-caption">幕張メッセ展示ホール「中央モール」にてライブペインティングを行います。8/14(金)〜8/16(日) 9:00〜19:00</p>
+        </div>
+        <div class="card-modal-description" hidden>
+          <p>このたび、「SUMMER SONIC 2026」ライブペインティング展示に参加いたします。</p>
+          <p>会場は「幕張メッセ展示ホール 中央エントランス側「中央モール」にて、ライブペインティングを行います。</p>
+          <p>SUMMER SONICならではの熱気とともに、ライブだからこそ生まれる一枚を描き上げます！会場へお越しの際は、ぜひお気軽にお立ち寄りください。（入場はチケットが必要になります。）</p>
+          <p>しかも、今年はSUMMER SONIC 25周年という特別な節目。その空気や熱気の中で、どのような作品が生まれるのか！！？</p>
+          <p>
+            <strong>【開催日】</strong><br>
+            2026年8月14日（金）<br>
+            2026年8月15日（土）<br>
+            2026年8月16日（日）
+          </p>
+          <p>
+            <strong>【制作時間】</strong><br>
+            9:00〜19:00
+          </p>
+          <p><strong>【SUMMER SONIC 2026】</strong><br><a href="https://www.summersonic.com/" target="_blank">https://www.summersonic.com/</a></p>
+        </div>
+      </div>
+
+      <div class="news-card" data-news-id="10">
+        <div class="news-image">
+          <img src="../image/info_img_suma_bnr_01.jpg" alt="SUMMER SONIC 2026 ステージバックバナー・サイドバナー">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.08.01</p>
+          <h4 class="news-title">SUMMER SONIC 2026 のステージバックバナー・サイドバナー作成しました。</h4>
+          <p class="news-caption">ZOZOマリンスタジアムエリア「Club Que Será Será」ステージのバナーを制作しました！</p>
+        </div>
+        <div class="card-modal-description" hidden>
+          <p>サマーソニック2026、ZOZOマリンスタジアムエリア「Club Que Será Será」ステージの、ステージバックバナー・サイドバナー作成しました。</p>
+          <p>松本伊代の座右の銘「ケセラセラ」にシンパシーを感じ、最高に陽気でラテンな感じを表現しました。</p>
+          <p><a href="https://www.summersonic.com/attractions/detail/club-que-sera-sera/" target="_blank">▶ Club Que Será Será 詳細はこちら</a></p>
+        </div>
+      </div>
+
+      <div class="news-card" data-news-id="9">
+        <div class="news-image">
+          <img src="../image/info_img_kawaii_anime_fest_2026.jpg" alt="KAWAII ANIME FESTIVAL 2026">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.05.18</p>
+          <h4 class="news-title">KAWAII ANIME FESTIVAL 2026 メインビジュアル参加のお知らせ</h4>
+          <p class="news-caption">5/23（土）東京藝術大学 上野キャンパスにて開催！上映会・トークセッション・交流会に登壇します🦄</p>
+        </div>
+        <div class="card-modal-description" hidden>
+          <p>KAWAII ANIME FESTIVAL 2026が5/23（土）に藝大の上野キャンパスにておこなわれます！</p>
+          <p>Digicon6でファンワークス賞をいただいたご縁から、メインビジュアルを松本キャラ満載で描かせていただきました。</p>
+          <p>上映会、トークセッション、交流会があり、全てGoogle フォームからの参加申込が必要ですが、KAWAIIに興味のあるみなさまはぜひとも奮ってご参加ください🦄🦞💐🪸🌺🌈🍒🎀💘</p>
+          <p><a href="https://animation.geidai.ac.jp/?p=3642" target="_blank">▶ 詳細はこちらから</a></p>
+          <p>
+            <strong>⭐️① アニメーション上映会（12:00–13:30）</strong><br>
+            ピロピロプゥの上映をしていただきます！かわいくて大好きな作品と並んで上映していただだけるようなのでとても楽しみです。
+          </p>
+          <p>
+            <strong>⭐️② トークセッション「Kawaiiを創る 〜クリエイターたちの試み〜」（15:00–16:00）</strong><br>
+            岡本先生をモデレーターに、りょーちもさん、ナガサカくん、あかりちゃんと共に登壇します。僭越ながら松本的KAWII論を喋らせていただけたらとおもいます🙇‍♀️
+          </p>
+          <p>
+            <strong>⭐️③ ネットワーキング（18:30–20:30）</strong><br>
+            最後の交流会は会費制ですが是非とも🔥
+          </p>
+          <p>
+            <strong>🌟2026年5月23日（土）12:00〜20:30</strong><br>
+            ・会場：東京藝術大学 上野キャンパス 音楽学部 5-109<br>
+            　（JR上野駅〈公園口〉・鶯谷駅より徒歩10分）<br>
+            ・内容：アニメーション上映会／トークセッション／ネットワーキング<br>
+            ・主催：東京藝術大学（大学院映像研究科・大学院国際芸術創造研究科）株式会社ファンワークス<br>
+            ・後援：一般社団法人キャラクターブランド・ライセンス協会（CBLA）日本貿易振興機構（JETRO）特定非営利活動法人映像産業振興機構（VIPO）
+          </p>
+        </div>
+      </div>
+
+      <div class="news-card" data-news-id="8">
+        <div class="news-image">
+          <img src="../image/info_img_event_20260510.jpg" alt="馬橋稲荷神社の奉納舞踊イベント">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.04.18</p>
+          <h4 class="news-title">馬橋稲荷神社の奉納舞踊イベント参加のお知らせ</h4>
+          <p class="news-caption">5/10(日)馬橋稲荷神社にて出店します！奉納舞踊にあわせてスーパーな寿司雑貨を販売予定🍃</p>
+        </div>
+        <div class="card-modal-description" hidden>
+          <p>GWは文フリ出店につづき、馬橋稲荷神社の奉納舞踊イベントでも出店させていただけることになりました！🐟</p>
+          <p>舞香さん( @maika_fujii )の奉納舞踊にあわせて、雑貨などを販売させていただきます🍃</p>
+          <p>スーパーな寿司雑貨を鋭意制作中です。</p>
+          <p>食べ物やビールのお店もでるみたいなので、お散歩ついでにぜひとも🚶✨</p>
+          <p>お品書きなど、続報をお待ちください！</p>
+          <p>
+            <strong>🌟2026/5/10(日)</strong><br>
+            ・時間：16:30〜20:00<br>
+            ・場所：馬橋稲荷神社（阿佐ヶ谷駅、高円寺駅から10分くらい🚶）<br>
+            　杉並区阿佐谷南２丁目４−４
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+            <img src="../image/info_img_event_20260510_02.png" alt="馬橋稲荷神社イベント" style="width:calc(50% - 5px);border-radius:8px;object-fit:cover;">
+            <img src="../image/info_img_event_20260510_03.png" alt="馬橋稲荷神社イベント" style="width:calc(50% - 5px);border-radius:8px;object-fit:cover;">
+          </div>
+        </div>
+      </div>
+
+      <div class="news-card" data-news-id="7">
+        <div class="news-image">
+          <img src="../image/info_img_event_20260504.jpg" alt="文学フリマ東京42出店">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.04.17</p>
+          <h4 class="news-title">「文学フリマ東京42」出店のお知らせ</h4>
+          <p class="news-caption">5/4(月祝)東京ビッグサイトにて出店！スーパーな寿司本を鋭意制作中です🐟</p>
+        </div>
+        <div class="card-modal-description" hidden>
+          <p>5/4(月祝)GWに、文学フリマ東京42に出店いたします！🐟<br>スーパーな寿司本を鋭意制作中です。</p>
+          <p>お品書きなど、続報をお待ちください！</p>
+          <p>
+            <strong>🌟2026/5/4(月祝)</strong><br>
+            ・場所：東京ビッグサイト 南1-4ホール<br>
+            ・ブース：お-32 "HOME PARTY"<br>
+            ・入場料：¥1,000(前売) / ¥1,350(当日スマチケ) / ¥1,500(当日窓口)<br>
+            ※18歳以下入場無料
+          </p>
+          <p><a href="https://bunfree.net/event/tokyo42/" target="_blank">▶ 文学フリマ東京42 詳細はこちら</a></p>
+        </div>
+      </div>
+
+      <div class="news-card" data-news-id="1">
+        <div class="news-image">
+          <img src="../image/info_01_20260117.jpg" alt="ニュース1">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2026.01.17</p>
+          <h4 class="news-title">“TOKYO CITY POP” gallery project Vol7,参加のお知らせ</h4>
+          <p class="news-caption">1月23日（金）〜1月30日（金） アートプロジェクト「“TOKYO CITY POP” gallery projectVol.7,「HOT DOGS」に@iyomtmtが参加します。</p>
+        </div>
+      </div>
+        
+      <div class="news-card" data-news-id="2">
+        <div class="news-image">
+          <img src="../image/info_01_0903.jpg" alt="ニュース2">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2025.09.03</p>
+          <h4 class="news-title">NICE ZINE ! 展 開催のお知らせ</h4>
+          <p class="news-caption">2025.9.3（水）〜 9.14（日） 横浜FEI ART MUSEUM YOKOHAMAにて展示会を開催します。</p>
+        </div>
+      </div>
+      
+        
+        
+        
+       
+        
+      <div class="news-card" data-news-id="3">
+        <div class="news-image">
+          <img src="../image/info_01.jpg" alt="ニュース3">
+        </div>
+        <div class="news-text">
+          <p class="news-date">2025.04.01</p>
+          <h4 class="news-title">2025.4.29（木）〜5.4（日）に1st EXHIBITION -HEY! OMACHI- 開催決定！</h4>
+          <p class="news-caption">スーパースシパーティー初の個展開催！来場者プレゼントもあるよ！</p>
+        </div>
+      </div>
+      
+      <!-- 必要に応じて追加のニュースカードをここに配置 -->
+    </div>
+    
+    <div class="more-button-container">
+      <a href="./information.html" class="more-button">More</a>
+    </div>
+    
+  </div>
+</section>
+    
+<section class="section-intro">
+  <div class="parallax-container" id="WORK">
+    <h2 class="parallax-title">WORK</h2>
+  </div>
+  <div class="intro-content">
+    <p>アニメーション制作</p>
+
+    <!-- 最新動画8件グリッド -->
+    <div class="work-video-grid" id="workVideoGrid"></div>
+
+    <div class="more-button-container">
+      <a href="./archive.html" class="more-button">More</a>
+    </div>
+  </div>
+</section>
+
+<!-- WORKセクション 動画モーダル -->
+<div id="workVideoModal" class="modal video-modal">
+  <div class="modal-content video-modal-content">
+    <span class="modal-close" id="workVideoModalClose">&times;</span>
+    <div class="video-modal-body">
+      <div class="video-embed-wrap">
+        <iframe id="workVideoIframe" src="" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="video-modal-info">
+        <h3 class="video-modal-title" id="workVideoModalTitle"></h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* WORKセクション: videos.json から最新8件をサムネイルで表示 + モーダル再生 */
+(function () {
+  const container = document.getElementById('workVideoGrid');
+  if (!container) return;
+
+  fetch('./videos.json')
+    .then(r => r.json())
+    .then(videos => {
+      videos.slice(0, 8).forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'work-video-card';
+        card.dataset.videoId = v.id;
+        card.dataset.videoTitle = v.title;
+        card.innerHTML =
+          '<div class="work-video-thumb">' +
+            '<img src="https://img.youtube.com/vi/' + v.id + '/maxresdefault.jpg" alt="' + v.title + '" loading="lazy" onerror="this.onerror=null;this.src=\'https://img.youtube.com/vi/' + v.id + '/hqdefault.jpg\'">' +
+            '<div class="work-video-play">▶</div>' +
+          '</div>' +
+          '<p class="work-video-title">' + v.title + '</p>';
+        container.appendChild(card);
+      });
+    })
+    .catch(() => {});
+
+  /* モーダル制御 */
+  const modal  = document.getElementById('workVideoModal');
+  const iframe = document.getElementById('workVideoIframe');
+  const close  = document.getElementById('workVideoModalClose');
+
+  container.addEventListener('click', e => {
+    const card = e.target.closest('.work-video-card');
+    if (!card) return;
+    iframe.src = 'https://www.youtube.com/embed/' + card.dataset.videoId + '?autoplay=1';
+    document.getElementById('workVideoModalTitle').textContent = card.dataset.videoTitle;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+
+  function closeModal() {
+    modal.classList.remove('active');
+    iframe.src = '';
+    document.body.style.overflow = '';
+  }
+  close.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+})();
+</script>
+<!--<div class="projects">
+  <div class="project"> <img src="./image/demo_01.jpg" alt="プロジェクト1">
+    <div class="project-info">
+      <div class="project-title">ミニマルデザインプロジェクト</div>
+      <div class="project-category">ブランディング / ウェブデザイン</div>
+      <p class="project-description">シンプルさと機能性を重視した現代的なデザインアプローチ。ブランドの本質を際立たせる洗練されたビジュアル言語を構築しました。</p>
+    </div>
+  </div>
+  <div class="project"> <img src="./image/demo_01.jpg" alt="プロジェクト2">
+    <div class="project-info">
+      <div class="project-title">モダンアートディレクション</div>
+      <div class="project-category">アートディレクション / アイデンティティ</div>
+      <p class="project-description">大胆な視覚表現と革新的なコンセプトを組み合わせたアートディレクション。従来の枠を超えたクリエイティブな挑戦です。</p>
+    </div>
+  </div>
+  <div class="project"> <img src="./image/demo_01.jpg" alt="プロジェクト3">
+    <div class="project-info">
+      <div class="project-title">タイポグラフィコレクション</div>
+      <div class="project-category">タイポグラフィ / プリント</div>
+      <p class="project-description">文字の芸術性と伝達力を探求した実験的なタイポグラフィプロジェクト。印刷媒体における表現の可能性を追求しています。</p>
+    </div>
+  </div>
+  <div class="project"> <img src="./image/demo_01.jpg" alt="プロジェクト4">
+    <div class="project-info">
+      <div class="project-title">デジタルエクスペリエンス</div>
+      <div class="project-category">UI/UX / ウェブデザイン</div>
+      <p class="project-description">ユーザー中心のアプローチで設計されたインタラクティブなデジタル体験。使いやすさと視覚的魅力を両立させています。</p>
+    </div>
+  </div>
+  <div class="project"> <img src="./image/demo_01.jpg" alt="プロジェクト5">
+    <div class="project-info">
+      <div class="project-title">ブランドアイデンティティ</div>
+      <div class="project-category">ブランディング / ロゴデザイン</div>
+      <p class="project-description">ブランドの本質と価値観を視覚的に表現した包括的なアイデンティティシステム。一貫性と独自性を重視しています。</p>
+    </div>
+  </div>
+  <div class="project"> <img src="./image/demo_01.jpg" alt="プロジェクト6">
+    <div class="project-info">
+      <div class="project-title">パッケージデザイン</div>
+      <div class="project-category">パッケージ / プロダクト</div>
+      <p class="project-description">製品の魅力を最大限に引き出す革新的なパッケージデザイン。機能性と美しさを兼ね備えた解決策を提供しています。</p>
+    </div>
+  </div>
+</div>-->
+<section class="parallax-bg-section">
+  <div class="parallax-bg" style="background-image: url('../image/parallax-bg.jpg');"></div>
+  <div class="parallax-content">
+    <div class="parallax-container" id="ABOUT">
+      <h2 class="parallax-title">ABOUT</h2>
+    </div>
+    <div class="intro-content">
+      <h3>SUPER SUSHI PARTYとは</h3>
+      <p>
+あべゆうか(<a href="https://www.instagram.com/abeyu.ka/" target="_blank">@abeyu.ka</a>)と松本伊代(<a href="https://www.instagram.com/iyomtmt/" target="_blank">@iyomtmt</a>)のアニメーション制作ユニットです<br>
+毎週スシアニメーション更新中🆙<br>
+ぜひフォローして、一緒にパーティーしましょう🎉🥳</p>
+        <p><strong>FOLLOW ME!</strong></p>
+        <p><a href="https://www.instagram.com/super.sushi.party/" target="_blank">🍣instagram🍣</a></p>
+        <p><a href="https://x.com/supepsushiparty?s=21" target="_blank">🍣X🍣</a></p>
+        <p><a href="https://www.tiktok.com/@supersushiparty?_t=ZS-8vIvC6ZwRQm&_r=1" target="_blank">🍣tiktok🍣</a></p>
+    </div>
+  </div>
+</section>
+
+<!--<section class="section-intro">
+  <div class="parallax-container" id="ACTIVITY">
+    <h2 class="parallax-title">ACTIVITY</h2>
+  </div>
+  <div class="intro-content">
+    <p>2025.4.29（木）〜5.4（日）に1st EXHIBITION -HEY! OMACHI- 開催決定！<br>
+        東京都墨田区の<a href="https://www.dalston.space" target="_blank">Gallary Dalston</a>にてお待ちしてます！</p>
+  </div>
+</section>-->
+    
+<section class="section-intro">
+  <div class="parallax-container" id="CONTACT">
+    <h2 class="parallax-title">CONTACT</h2>
+  </div>
+
+    
+    <form action="https://ssgform.com/s/9ToymwBjy0zr" method="post">
+    <p>お名前<span class="must">必須</span></p>
+    <input type="text" name="お名前" required="required" />
+    <p>メールアドレス<span class="must">必須</span></p>
+    <input type="email" name="メールアドレス" required="required" />
+    
+    <p>お問い合わせ種別<span class="must">必須</span></p>
+    <select name="お問い合わせ種別" required="required">
+        <option value="イラスト作成依頼">イラスト作成依頼</option>
+        <option value="アニメーション作成依頼">イラスト作成依頼</option>
+        <option value="メディア関連">メディア関連</option>
+        <option value="その他">その他</option>
+    </select>
+    
+    <!--<p>症状を選択してください<span class="must">必須</span></p>
+    <select name="your-select" required>
+        <option value="" disabled selected>症状を選択してください</option>
+        <option value="ぎっくり腰">ぎっくり腰</option>
+        <option value="ストレートネック">ストレートネック</option>
+        <option value="すべり症">すべり症</option>
+        <option value="バネ指">バネ指</option>
+        <option value="ヘルニア">ヘルニア</option>
+        <option value="モートン病">モートン病</option>
+        <option value="過敏性腸症候群">過敏性腸症候群</option>
+        <option value="肩こり">肩こり</option>
+        <option value="五十肩">五十肩</option>
+        <option value="腰椎分離症">腰椎分離症</option>
+        <option value="腰痛">腰痛</option>
+        <option value="坐骨神経痛">坐骨神経痛</option>
+        <option value="手根管症候群">手根管症候群</option>
+        <option value="手足のしびれ">手足のしびれ</option>
+        <option value="首こり">首こり</option>
+        <option value="首痛">首痛</option>
+        <option value="脊柱管狭窄症">脊柱管狭窄症</option>
+        <option value="仙腸関節炎">仙腸関節炎</option>
+        <option value="足底筋膜炎">足底筋膜炎</option>
+        <option value="頭痛">頭痛</option>
+        <option value="膝の痛み">膝の痛み</option>
+        <option value="変形性股関節症">変形性股関節症</option>
+        <option value="変形性膝関節症">変形性膝関節症</option>
+        <option value="梨状筋症候群">梨状筋症候群</option>
+        <option value="肋間神経痛">肋間神経痛</option>
+        <option value="頸椎ヘルニア">頸椎ヘルニア</option>
+        <option value="頸椎症">頸椎症</option>
+        <option value="鵞足炎">鵞足炎</option>
+        <option value="冷え性">冷え性</option>
+        <option value="分からない">分からない</option>
+        <option value="その他">その他</option>
+    </select>
+    
+    <p>希望日を選択してください<span class="must">必須</span></p>
+    <p>第一希望日時</p>
+    <input type="date" name="第一希望日時" min="<script>document.write(new Date().toISOString().split('T')[0]);</script>" max="<script>document.write(new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0]);</script>" required>
+    
+    <p>第二希望日時</p>
+    <input type="date" name="第二希望日時" min="<script>document.write(new Date().toISOString().split('T')[0]);</script>" max="<script>document.write(new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0]);</script>" required>-->
+    
+    <p>お問い合わせ内容<span class="nin">任意</span></p>
+    <textarea name="お問い合わせ内容" required="required"></textarea>
+    
+<!--    <p>資料希望</p>
+    <input type="radio" name="資料" value="希望" id="document-true">
+    <label for="document-true">資料希望</label>
+    <input type="radio" name="資料" value="不要" id="document-false">
+    <label for="document-false">資料不要</label>
+    
+    <p>希望資料</p>
+    <input type="checkbox" name="希望資料[]" value="サービスA" id="service-a">
+    <label for="service-a">サービスA</label>
+    <input type="checkbox" name="希望資料[]" value="サービスB" id="service-b">
+    <label for="service-b">サービスB</label>
+    <input type="checkbox" name="希望資料[]" value="サービスC" id="service-c">
+    <label for="service-c">サービスC</label>
+    
+    <br>
+    <input type="checkbox" name="個人情報保護方針" value="同意する" id="agreement">
+    <label for="agreement">個人情報保護方針に同意する</label>-->
+    
+    <button type="submit">送信する</button>
+</form>
+    
+</section>
+<footer> 
+  <div class="social-links">
+    <a href="https://www.instagram.com/super.sushi.party/" target="_blank" class="social-icon" aria-label="Instagram">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+      </svg>
+    </a>
+    <a href="https://x.com/supepsushiparty?s=21" target="_blank" class="social-icon" aria-label="X (Twitter)">
+      <span class="x-text">X</span>
+    </a>
+    <a href="https://www.tiktok.com/@supersushiparty?_t=ZS-8vIvC6ZwRQm&_r=1" target="_blank" class="social-icon" aria-label="TikTok">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path>
+      </svg>
+    </a>
+  </div>
+  <div class="copyright">© 2026 Copyright SuperSushiParty. All Rights Reserved.</div>
+</footer>
+<!-- モーダルウィンドウ -->
+<div id="newsModal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <div class="modal-body">
+      <p class="modal-date"></p>
+      <h3 class="modal-title"></h3>
+      <div class="modal-image">
+        <img src="" alt="">
+      </div>
+      <div class="modal-description"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+/* ====================================================
+   ヒーローグリッド: YouTube IFrame Player API でランダム表示
+   バッファリング中はサムネイルを重ねて黒画面を隠す
+   ==================================================== */
+(function () {
+  const grid = document.getElementById('heroVideoGrid');
+  if (!grid) return;
+  const items = Array.from(grid.querySelectorAll('.video-item'));
+
+  let shuffledVideos = null;
+  let apiReady = false;
+
+  /* videos.json と YouTube IFrame API の両方が揃ったら初期化 */
+  function tryInit() {
+    if (!shuffledVideos || !apiReady) return;
+
+    items.forEach((item, i) => {
+      const vid = shuffledVideos[i % shuffledVideos.length];
+
+      /* サムネイルオーバーレイ: 再生中は透明、バッファリング中は不透明 */
+      const overlay = document.createElement('div');
+      overlay.className = 'yt-thumb-overlay';
+      overlay.style.backgroundImage =
+        `url(https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg)`;
+      item.appendChild(overlay);
+
+      /* YT.Player をこの div として埋め込む */
+      const playerEl = document.createElement('div');
+      item.appendChild(playerEl);
+
+      new YT.Player(playerEl, {
+        videoId: vid.id,
+        playerVars: {
+          autoplay: 1, mute: 1, loop: 1, playlist: vid.id,
+          controls: 0, playsinline: 1, rel: 0, modestbranding: 1
+        },
+        events: {
+          onReady(e) {
+            /* API が生成した iframe にカバースタイルを適用 */
+            const f = e.target.getIframe();
+            f.style.cssText =
+              'position:absolute;top:50%;left:50%;width:200%;height:200%;' +
+              'transform:translate(-50%,-50%);pointer-events:none;border:0;';
+            e.target.playVideo();
+          },
+          onStateChange(e) {
+            if (e.data === YT.PlayerState.PLAYING) {
+              /* 再生中 → オーバーレイを消してビデオを見せる */
+              setTimeout(() => { overlay.style.opacity = '0'; }, 500);
+            } else if (
+              e.data === YT.PlayerState.BUFFERING ||
+              e.data === -1 /* unstarted */
+            ) {
+              /* バッファリング中 → サムネイルで黒画面を隠す */
+              overlay.style.opacity = '1';
+            }
+          }
+        }
+      });
+    });
+  }
+
+  /* YouTube IFrame Player API を動的に読み込む */
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+
+  window.onYouTubeIframeAPIReady = function () {
+    apiReady = true;
+    tryInit();
+  };
+
+  /* videos.json を取得してシャッフル */
+  fetch('./videos.json')
+    .then(r => r.json())
+    .then(videos => {
+      for (let i = videos.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [videos[i], videos[j]] = [videos[j], videos[i]];
+      }
+      shuffledVideos = videos;
+      tryInit();
+    })
+    .catch(() => {});
+})();
+</script>
+<style>
+/* ヒーローグリッド YouTube */
+.video-item {
+  background-size: cover;
+  background-position: center;
+}
+.video-item iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border: 0;
+}
+/* バッファリング中にサムネイルを重ねるオーバーレイ */
+.yt-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+/* レスポンシブ対応のフォームデザイン */
+form {
+  /*max-width: 80%;*/
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fbea78;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 12px 0 6px;
+}
+
+.must {
+  color: red;
+  font-size: 16px;
+  margin-left: 5px;
+}
+
+.nin {
+  color: gray;
+  font-size: 16px;
+  margin-left: 5px;
+}
+
+input[type="text"],
+input[type="email"],
+select,
+textarea {
+  width: 100%;
+  padding: 18px;
+  margin-top: 6px;
+  margin-bottom: 18px;
+  border: 1px solid #d7c968;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* カレンダー入力の枠をボタン風に調整し、PCとスマホで分けて表示 */
+input[type="date"] {
+  width: 100%;
+  padding: 18px;
+  margin-top: 6px;
+  margin-bottom: 18px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 18px;
+  background-color: white;
+  cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  text-align: left;
+  min-height: 50px;
+  position: relative;
+}
+
+/* PC用カレンダーアイコンを大きくしてクリック範囲を拡大 */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+}
+
+/* スマホ用カレンダーアイコン（PCでは非表示） */
+@media screen and (max-width: 600px) {
+  input[type="date"] {
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36"><path fill="%23007bff" d="M3 4h1V2h2v2h10V2h2v2h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 16h18V10H3v10zm5-8h2v2H8v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 36px;
+  }
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+textarea {
+  height: 140px;
+  resize: vertical;
+}
+
+button {
+  width: 100%;
+  padding: 18px;
+  background-color: #d3005a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* ショップバナー */
+.shop-banner-section {
+  text-align: center;
+  padding: 48px 20px;
+}
+.shop-banner-section a {
+  display: inline-block;
+  max-width: 800px;
+  width: 100%;
+}
+.shop-banner-section img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* レスポンシブ対応 */
+@media screen {
+  form {
+    width: 100%;
+   /* padding: 50px;*/
+  }
+  p {
+    font-size: 18px;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 18px;
+    padding: 12px;
+    min-height: 40px;
+  }
+  button {
+    font-size: 22px;
+    padding: 22px;
+  }
+}
+
+    
+    </style>
+    
+    
+</body>
+</html>
