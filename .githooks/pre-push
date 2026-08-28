@@ -1,0 +1,25 @@
+#!/bin/sh
+# main への push 前に、これから送信される差分を表示する
+# push先ブランチが main の場合のみチェックする
+
+remote="$1"
+protected_branch="main"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+	branch=$(echo "$remote_ref" | sed 's|refs/heads/||')
+	if [ "$branch" != "$protected_branch" ]; then
+		continue
+	fi
+
+	if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+		range="$local_sha"
+	else
+		range="$remote_sha..$local_sha"
+	fi
+
+	echo "=== ${remote} (${branch}) へ push される変更 ==="
+	git diff --stat "$range"
+	echo "---"
+	git diff --name-status "$range"
+	echo "==========================================="
+done

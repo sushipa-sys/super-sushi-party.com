@@ -20,3 +20,19 @@ GitHub リポジトリの `Settings > Secrets and variables > Actions` で以下
 
 サーバーが平文FTPのみ対応の場合は、`.github/workflows/ftp-deploy.yml` 内の
 `protocol: ftps` を `protocol: ftp` に変更してください（非推奨・可能な限りFTPS推奨）。
+
+FTP-Deploy-Action は前回デプロイ時の状態（ファイルハッシュ）をサーバー上に保持し、
+差分（変更・追加・削除されたファイルのみ）だけをアップロードします。
+毎回全ファイルを上書きするわけではありません。Actionsのログ（`log-level: verbose`）で
+実際にアップロードされたファイル一覧を確認できます。
+
+## push前の差分チェック（ローカル）
+
+このリポジトリをクローンしたら、以下を一度実行してください。
+
+```
+git config core.hooksPath .githooks
+```
+
+これで `main` へ `git push` する際に、送信される差分（変更ファイル一覧・diff --stat）が
+自動的にターミナルに表示されるようになります（`.githooks/pre-push`）。
